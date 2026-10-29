@@ -1,7 +1,7 @@
 /* 备忘录 PWA Service Worker
  * 更新应用后请修改 CACHE_VERSION，让旧缓存自动失效。
  */
-const CACHE_VERSION = "ops-note-v1.0.3";
+const CACHE_VERSION = "ops-note-v1.0.4";
 const CORE_ASSETS = [
   "./",
   "./index.html",

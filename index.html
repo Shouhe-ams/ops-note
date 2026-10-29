@@ -244,19 +244,18 @@ svg.icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-w
   border-radius: 13px;
   background: rgba(255, 255, 255, .035);
 }
-.ring {
-  --deg: 0deg;
-  width: 45px;
-  height: 45px;
+.side-week-icon {
+  width: 38px;
+  height: 38px;
   flex: none;
-  border-radius: 50%;
   display: grid;
   place-items: center;
-  background: conic-gradient(var(--lime) var(--deg), rgba(255, 255, 255, .075) 0);
-  position: relative;
+  border: 1px solid rgba(143, 216, 255, .14);
+  border-radius: 11px;
+  background: rgba(143, 216, 255, .10);
+  color: var(--lime);
 }
-.ring::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--forest); }
-.ring b { position: relative; font-size: 10px; font-weight: 700; color: var(--lime); letter-spacing: -.02em; }
+.side-week-icon .icon { width: 17px; height: 17px; }
 .side-week-copy { min-width: 0; }
 .side-week-copy span { display: block; font-size: 10px; color: rgba(244, 241, 231, .4); letter-spacing: .04em; }
 .side-week-copy b { font-size: 14px; font-weight: 600; }
@@ -1579,10 +1578,10 @@ body{background:var(--paper)}
 
     <div class="sidebar-foot">
       <div class="side-week">
-        <div class="ring" id="sideRing"><b id="ringPct">0%</b></div>
+        <div class="side-week-icon"><svg class="icon"><use href="#i-check-circle"/></svg></div>
         <div class="side-week-copy">
           <span>本周完成</span>
-          <b id="ringDone">0</b> <em>/ 10 项</em>
+          <b id="sideWeekDone">0</b> <em>项</em>
         </div>
       </div>
       <div class="side-actions">
@@ -1652,7 +1651,7 @@ body{background:var(--paper)}
         <div class="stat-card" style="--glow:rgba(63,122,89,.14);--icon-bg:#e8f2eb;--icon-color:#4d7e60;">
           <div class="stat-top"><span class="stat-label">本周完成</span><span class="stat-icon"><svg class="icon"><use href="#i-check-circle"/></svg></span></div>
           <div class="stat-value"><b id="statWeek">0</b><span>项</span></div>
-          <p class="stat-hint" id="statWeekHint">目标 10 项</p>
+          <p class="stat-hint" id="statWeekHint">按完成日期统计</p>
         </div>
         <div class="stat-card" id="overdueCard" style="--glow:rgba(223,90,61,.12);--icon-bg:#fbeae4;--icon-color:#c66048;">
           <div class="stat-top"><span class="stat-label">已逾期</span><span class="stat-icon"><svg class="icon"><use href="#i-alert"/></svg></span></div>
@@ -1717,11 +1716,9 @@ body{background:var(--paper)}
             <div class="rail-head"><h3>本周节奏</h3><span id="weekLabel">W44</span></div>
             <div class="week-bars" id="weekBars"></div>
             <div class="week-summary">
-              <div class="week-summary-left"><span>已完成</span><b id="weekDone">0</b><em>/ <span id="weekTarget">10</span> 项</em></div>
-              <span class="week-pct" id="weekPct">0%</span>
+              <div class="week-summary-left"><span>本周完成</span><b id="weekDone">0</b><em>项</em></div>
             </div>
-            <div class="progress-track"><span id="weekProgress" style="width:0%"></span></div>
-            <p class="week-message" id="weekMessage">再完成几项，就达成本周目标。</p>
+            <p class="week-message">按完成日期统计</p>
           </section>
 
           <section class="rail-card">
@@ -2004,7 +2001,6 @@ body{background:var(--paper)}
      ============================================================ */
   const STORAGE_KEY = "opsnote.data.v1";
   const VIEW_KEY = "opsnote.view.v1";
-  const WEEK_TARGET = 10;
   const TYPE_META = {
     "活动": { cls: "type-activity", glyph: "活" },
     "内容": { cls: "type-content", glyph: "稿" },
@@ -3312,7 +3308,6 @@ body{background:var(--paper)}
     const highDoing = doingList.filter(m => m.priority === "high").length;
     const weekDone = weekDoneMemos().length;
     const overdue = overdueMemos().length;
-    const pct = Math.min(100, Math.round((weekDone / WEEK_TARGET) * 100));
 
     $("#statToday").textContent = today;
     $("#statTodayHint").textContent = overdue ? "其中 " + overdue + " 项已逾期" : today ? "都在今天推进" : "今天暂时没有到期事项";
@@ -3322,7 +3317,7 @@ body{background:var(--paper)}
     $("#statDoingHint").textContent = highDoing ? "含 " + highDoing + " 项高优先" : doing ? "保持推进，及时收口" : "还没有进行中的事项";
 
     $("#statWeek").textContent = weekDone;
-    $("#statWeekHint").textContent = "目标 " + WEEK_TARGET + " 项 · 完成 " + pct + "%";
+    $("#statWeekHint").textContent = "按完成日期统计";
 
     $("#statOverdue").textContent = overdue;
     const oldest = overdueMemos().sort((a, b) => (parseDate(a.due)?.getTime() || 0) - (parseDate(b.due)?.getTime() || 0))[0];
@@ -3355,13 +3350,8 @@ body{background:var(--paper)}
     });
 
     const weekDone = weekDoneMemos().length;
-    const pct = Math.min(100, Math.round((weekDone / WEEK_TARGET) * 100));
-    const ring = $("#sideRing");
-    ring.style.setProperty("--deg", (pct * 3.6) + "deg");
-    $("#ringPct").textContent = pct + "%";
-    $("#ringDone").textContent = weekDone;
-    const ringTarget = $(".side-week-copy em");
-    if (ringTarget) ringTarget.textContent = "/ " + WEEK_TARGET + " 项";
+    const sideWeekDone = $("#sideWeekDone");
+    if (sideWeekDone) sideWeekDone.textContent = weekDone;
   }
 
   function renderWeek() {
@@ -3383,17 +3373,8 @@ body{background:var(--paper)}
         '<span class="week-label">' + labels[i] + "</span></div>";
     }).join("");
 
-    const weekDone = done.length;
-    const pct = Math.min(100, Math.round((weekDone / WEEK_TARGET) * 100));
-    $("#weekDone").textContent = weekDone;
-    $("#weekTarget").textContent = WEEK_TARGET;
-    $("#weekPct").textContent = pct + "%";
-    $("#weekProgress").style.width = pct + "%";
+    $("#weekDone").textContent = done.length;
     $("#weekLabel").textContent = "W" + pad(weekNumber(now));
-    const remaining = Math.max(0, WEEK_TARGET - weekDone);
-    $("#weekMessage").textContent = remaining > 0
-      ? "再完成 " + remaining + " 项，就达成本周目标。"
-      : "本周目标已达成，保持节奏。";
   }
 
   /* ============================================================
