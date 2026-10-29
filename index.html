@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#15271f">
+<meta name="theme-color" content="#0e2a43">
 <meta name="application-name" content="备忘录">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="备忘录">
@@ -1364,6 +1364,140 @@ dialog::backdrop { background: rgba(16, 26, 20, .44); backdrop-filter: blur(4px)
   .board-col .board-list { grid-template-columns: 1fr; }
   .drawer-fields { grid-template-columns: 1fr 1fr; }
 }
+
+/* ===== BLUE THEME ===== */
+:root{
+  --ink:#142b3f; --ink-soft:#2e4a62; --muted:#7a8fa2; --muted-light:#9fb2c2;
+  --paper:#eef6fc; --paper-deep:#e2eef8; --surface:#fcfeff; --surface-soft:#f4faff;
+  --line:#d9e7f2; --line-strong:#c5d9e8;
+  --forest:#0e2a43; --forest-soft:#173e5d; --forest-line:rgba(255,255,255,.10);
+  --lime:#8fd8ff; --lime-deep:#5fbce8;
+  --coral:#e76f51; --coral-dark:#c8553b; --coral-soft:#fbeae5;
+  --amber:#b07d34; --amber-soft:#f7efdf;
+  --blue:#2e6f9e; --blue-soft:#e4f1f9; --green:#2f8c83; --green-soft:#e3f3f1;
+  --violet:#6073a5; --violet-soft:#edf0f9;
+  --shadow-sm:0 1px 2px rgba(16,42,67,.045);
+  --shadow-md:0 10px 28px rgba(16,42,67,.08);
+  --shadow-lg:0 30px 80px rgba(9,30,49,.22);
+  --focus:#3f8fbe;
+}
+body{background:var(--paper)}
+.main{background:radial-gradient(800px 440px at 96% 0%, rgba(255,255,255,.92), transparent 70%), var(--paper)}
+.topbar{background:rgba(238,246,252,.88);border-bottom-color:rgba(197,217,232,.72)}
+.searchbox{background:rgba(252,254,255,.78)}
+.searchbox:focus-within{border-color:#a9cfe6;box-shadow:0 0 0 3px rgba(143,216,255,.16)}
+.sidebar{
+  background:
+    radial-gradient(520px 360px at 100% -4%, rgba(143,216,255,.16), transparent 68%),
+    radial-gradient(320px 280px at -20% 88%, rgba(63,143,190,.16), transparent 72%),
+    var(--forest);
+}
+.brand-mark{background:linear-gradient(145deg,#a9e5ff,#6cc6f1);box-shadow:0 6px 18px rgba(143,216,255,.18);color:#0e2a43}
+.avatar{background:#dff1fc;color:#153b5b}
+.workspace-switch{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.10)}
+.nav-item.active{background:rgba(143,216,255,.13);box-shadow:inset 0 0 0 1px rgba(143,216,255,.07)}
+.nav-item.active em{background:var(--lime);color:var(--forest)}
+.nav-item.alert.has-overdue em{color:#ffc0b2;background:rgba(231,111,81,.16)}
+.nav-item.alert.active.has-overdue em{color:#fff;background:var(--coral)}
+.side-week{border-color:rgba(255,255,255,.10);background:rgba(255,255,255,.04)}
+.ring{background:conic-gradient(var(--lime) var(--deg), rgba(255,255,255,.075) 0)}
+.ring::before{background:var(--forest)}
+.quick-card{background:radial-gradient(220px 160px at 110% -20%, rgba(143,216,255,.22), transparent 65%), var(--forest);box-shadow:0 10px 25px rgba(14,42,67,.16)}
+.quick-parse{border-color:rgba(143,216,255,.18);background:rgba(143,216,255,.09)}
+.quick-save{background:linear-gradient(135deg,#a9e5ff,#7dd0f6);color:#0e2a43}
+.quick-save:hover{background:#c2eeff}
+.quick-type{background-color:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12)}
+.brand-copy span,.workspace-copy span,.side-week-copy span,.storage-note{color:rgba(244,250,255,.48)}
+.type-item em,.nav-item em{background:rgba(255,255,255,.06)}
+.type-item .type-dot{background:#7db9d8!important}
+.type-item:nth-child(1) .type-dot{background:#5b9ec7!important}
+.type-item:nth-child(2) .type-dot{background:#7ab7d9!important}
+.type-item:nth-child(3) .type-dot{background:#92cce9!important}
+.type-item:nth-child(4) .type-dot{background:#6e91bf!important}
+.type-item:nth-child(5) .type-dot{background:#5f929e!important}
+.type-item:nth-child(6) .type-dot{background:#9aafbd!important}
+.demo-pill{border-color:#cce4f2;background:#eaf7ff;color:#3f7e9e}
+.demo-pill:hover{background:#dff2ff;border-color:#b6d9ed;color:#2d6f90}
+.review-btn{border-color:#cce5f3;background:#eaf7ff;color:#3a7899}
+.review-btn:hover{border-color:#b5d8eb;background:#dff2ff;color:#2d6f90}
+.review-btn .icon{color:#4c93b5}
+.review-btn.is-reviewed{border-color:#cde9e7;background:#e7f6f5;color:#347a76}
+.review-btn.is-reviewed .icon{color:#4e938e}
+.btn-primary{background:linear-gradient(135deg,#1a4f78,#123a59);border-color:#123a59;box-shadow:0 4px 12px rgba(14,42,67,.14)}
+.btn-primary:hover{background:linear-gradient(135deg,#22628f,#164665);border-color:#164665}
+.stat-card{--glow:rgba(143,216,255,.18)!important;--icon-bg:#eaf7ff!important;--icon-color:#3b86a9!important;background:linear-gradient(155deg,rgba(255,255,255,.9),rgba(247,252,255,.72)),var(--surface)}
+.stat-card.is-warn{--glow:rgba(231,111,81,.10)!important;--icon-bg:#fbeae5!important;--icon-color:#c45b43!important}
+.stat-value b{color:#122b40}
+.stat-hint{color:#8fa5b6}
+.searchbox .icon,.crumb,.feed-sub,.stat-label{color:#8ca2b4}
+.btn:not(.btn-primary){background:rgba(252,254,255,.88)}
+.btn:not(.btn-primary):hover{background:#fff;border-color:#c5d9e8}
+.feed-tools .sort-select,.view-toggle{background:rgba(252,254,255,.7)}
+.view-btn.active{background:#f7fcff;color:#1d4e6d}
+.group-head[data-tone="today"] .group-name i{background:#64bddf}
+.group-head[data-tone="done"] .group-name i{background:var(--green)}
+.memo-card{background:rgba(252,254,255,.96)}
+.memo-card:hover{border-color:#c9dfed;background:#fff;box-shadow:0 5px 18px rgba(16,42,67,.07)}
+.memo-card.is-done{background:rgba(248,252,255,.78)}
+.memo-check{border-color:#c8dce9}
+.memo-check:hover{border-color:var(--green);background:var(--green-soft);color:var(--green)}
+.memo-check.checked{border-color:var(--green);background:var(--green);color:#fff}
+.memo-title{color:#17324a}
+.memo-desc{color:#8ca0b0}
+.type-chip{font-weight:500}
+.type-activity{--type-color:#3e6fa3;--type-bg:#e8f0f9;--dot:#4e7db0}
+.type-content{--type-color:#4a7fa8;--type-bg:#e7f1f8;--dot:#5b92b9}
+.type-data{--type-color:#2f7f9e;--type-bg:#e4f2f7;--dot:#3f93b1}
+.type-partner{--type-color:#5b6fa8;--type-bg:#ebedf9;--dot:#7184bd}
+.type-review{--type-color:#3f7c82;--type-bg:#e5f2f3;--dot:#529398}
+.type-other{--type-color:#6e8190;--type-bg:#eef3f6;--dot:#8b9ca9}
+.tag-mini,.check-chip{color:#8ea1b0}
+.status-pill{background:#edf5fb;color:#70889a}
+.status-pill.doing{background:#e2f3fb;color:#2d7fa1}
+.status-pill.done{background:#e3f3f1;color:#2f8c83}
+.due-chip{color:#8297a7}
+.due-chip.today{color:#2f7fa0}
+.due-chip.overdue{color:var(--coral-dark)}
+.card-more:hover{background:#edf6fc;color:#2e5a76}
+.week-day.has-value .week-bar{background:#a8d9ee}
+.week-day.is-today .week-bar{background:#215b82}
+.progress-track{background:#e4eef7}
+.progress-track span{background:linear-gradient(90deg,#5bb5dd,#9fe3ff)}
+.template-glyph{font-weight:600}
+.template-item:hover{background:#f2f9fe}
+.rail-card,.review-dialog,.memo-dialog,.cloud-dialog,.confirm-dialog,.help-dialog{background:#fbfdff}
+.review-head,.cloud-head{background:linear-gradient(145deg,#fbfdff,#f1f8fd)}
+.review-stat,.review-section,.cloud-account{background:rgba(252,254,255,.9)}
+.cloud-benefits span{background:#eaf6fd;color:#4e86a2}
+.cloud-pill{background:rgba(252,254,255,.82)}
+.cloud-pill.is-synced{border-color:#cde7e5;background:#eaf7f6;color:#347a76}
+.cloud-pill.is-syncing{border-color:#cce5f3;background:#eaf7ff;color:#3a7899}
+.cloud-pill.is-offline{border-color:#f0d5cd;background:#fdf1ed;color:#b56b58}
+.cloud-avatar{background:linear-gradient(145deg,#1b547d,#123a59);color:#b7eaff}
+.cloud-dialog .control input{background:#fff}
+.field-mini input,.field-mini select,.control input,.control select,.control textarea,.drawer-notes,.drawer-title{border-color:#d9e7f2}
+.field-mini input:focus,.field-mini select:focus,.control input:focus,.control select:focus,.control textarea:focus{border-color:#a9cfe6;box-shadow:0 0 0 3px rgba(143,216,255,.16)}
+.drawer{background:#f8fcff;border-left-color:rgba(255,255,255,.5)}
+.drawer-head{background:rgba(248,252,255,.92)}
+.drawer-title{color:#14304a}
+.review-note, .check-item:hover{background:rgba(240,249,255,.55)}
+.review-done-row .icon{color:var(--green)}
+.review-open-row:hover{background:#f0f9fe}
+.review-stat.is-done b{color:var(--green)}
+.review-stat.is-overdue b{color:var(--coral-dark)}
+.side-action{border-color:rgba(255,255,255,.10)}
+.side-action:hover{background:rgba(255,255,255,.08)}
+.toast{background:#0d2b44}
+.empty{border-color:#d7e6f1;background:rgba(252,254,255,.5)}
+.empty-art{border-color:#d7e6f1;background:#fcfeff;color:#93aebe}
+.cloud-message{background:#fbeae5;color:#b55b46}
+.cloud-message.is-success{background:#e7f6f5;color:#347a76}
+::selection{background:#a5e3ff;color:#0e2a43}
+
+/* blue theme refinements */
+.review-foot, .modal-foot, .help-foot { background: #fbfdff; border-top-color: #d9e7f2; }
+.review-body, .review-notes-field textarea { background-color: transparent; }
+.cloud-dialog .control input { background: #ffffff; }
 </style>
 </head>
 <body>
