@@ -3208,7 +3208,7 @@ body{background:var(--paper)}
     if (state.filter === "today") {
       const end = endOfDay(new Date()).getTime();
       return list.filter(m => {
-        if (m.status === "done") return isCompletedToday(m);
+        if (m.status === "done") return false;
         const d = parseDate(m.due);
         return d && d.getTime() <= end;
       });
@@ -3250,9 +3250,6 @@ body{background:var(--paper)}
     if (someday.length) groups.push({ title: "未排期", tone: "someday", items: sortMemos(someday) });
     if (doneToday.length) groups.push({ title: "今天已完成", tone: "done", items: sortCompleted(doneToday) });
     if (doneOther.length && state.filter === "all") groups.push({ title: "最近完成", tone: "done", items: sortCompleted(doneOther) });
-    if (doneOther.length && state.filter === "today") {
-      groups.push({ title: "更早完成", tone: "done", items: sortCompleted(doneOther).slice(0, 3) });
-    }
     return groups;
   }
 

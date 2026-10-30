@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.4
+version: v1.0.5
 theme: blue
-change: remove weekly target
+change: hide completed items from today
