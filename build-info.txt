@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.5
+version: v1.0.6
 theme: blue
-change: hide completed items from today
+change: save detail title and notes timestamps

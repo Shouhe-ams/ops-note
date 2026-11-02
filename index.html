@@ -4595,15 +4595,24 @@ body{background:var(--paper)}
     $("#dTitle").addEventListener("input", () => {
       const m = openMemo(); if (!m) return;
       m.title = $("#dTitle").value;
+      // 标题/备注是直接改字段，必须同步更新时间，否则云同步会拿旧版本覆盖。
+      m.updatedAt = new Date().toISOString();
       queuePersist();
     });
     $("#dTitle").addEventListener("blur", () => {
       const m = openMemo(); if (!m) return;
-      if (!m.title.trim()) { m.title = "未命名备忘"; $("#dTitle").value = m.title; saveNow(); renderAll(); }
+      if (!m.title.trim()) {
+        m.title = "未命名备忘";
+        m.updatedAt = new Date().toISOString();
+        $("#dTitle").value = m.title;
+        saveNow();
+        renderAll();
+      }
     });
     $("#dNotes").addEventListener("input", () => {
       const m = openMemo(); if (!m) return;
       m.notes = $("#dNotes").value;
+      m.updatedAt = new Date().toISOString();
       queuePersist();
     });
     $("#dStatus").addEventListener("change", e => {
