@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.6
+version: v1.0.7
 theme: blue
-change: save detail title and notes timestamps
+change: today quick deadline 19:30

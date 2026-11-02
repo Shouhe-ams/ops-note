@@ -1831,7 +1831,7 @@ body{background:var(--paper)}
         </label>
       </div>
       <div class="due-quick" id="dueQuick">
-        <button type="button" data-quick="today">今天 18:00</button>
+        <button type="button" data-quick="today">今天 19:30</button>
         <button type="button" data-quick="tomorrow">明天 10:00</button>
         <button type="button" data-quick="friday">本周五 18:00</button>
         <button type="button" data-quick="clear">不设截止</button>
@@ -2351,7 +2351,7 @@ body{background:var(--paper)}
       id: "activity", name: "活动上线检查", glyph: "活", type: "活动", priority: "high",
       title: "活动上线前检查",
       notes: "上线前 2 小时逐项确认，任何一项异常先在项目群同步，再决定是否延期。",
-      dueMode: "today18", repeat: "none",
+      dueMode: "today1930", repeat: "none",
       checklist: ["会场 / 页面物料终检", "商品价格与库存复核", "优惠券与权益配置", "埋点与数据看板", "客服话术同步", "应急联系人确认", "上线后 30 分钟数据观察"]
     },
     {
@@ -3579,8 +3579,8 @@ body{background:var(--paper)}
       return toInputValue(d);
     }
     const d = new Date(now);
-    d.setHours(18, 0, 0, 0);
-    if (mode === "today18" && d.getTime() < now.getTime() + 30 * 60000) {
+    d.setHours(19, 30, 0, 0);
+    if (mode === "today1930" && d.getTime() < now.getTime() + 30 * 60000) {
       d.setDate(d.getDate() + 1);
     }
     return toInputValue(d);
@@ -3608,9 +3608,9 @@ body{background:var(--paper)}
   }
 
   function updateDueQuickLabels() {
-    const todayDue = parseDate(templateDue("today18"));
+    const todayDue = parseDate(templateDue("today1930"));
     if (todayDue) {
-      $('[data-quick="today"]').textContent = dayOffset(todayDue) === 0 ? "今天 18:00" : "明天 18:00";
+      $('[data-quick="today"]').textContent = dayOffset(todayDue) === 0 ? "今天 19:30" : "明天 19:30";
     }
     const friday = parseDate(templateDue("friday"));
     if (friday) {
