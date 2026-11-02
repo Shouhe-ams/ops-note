@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.7
+version: v1.0.8
 theme: blue
-change: today quick deadline 19:30
+change: quick text today defaults to 19:30
