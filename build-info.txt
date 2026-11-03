@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.8
+version: v1.0.9
 theme: blue
-change: quick text today defaults to 19:30
+change: add live plan board
