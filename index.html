@@ -1543,6 +1543,19 @@ body{background:var(--paper)}
 .live-dialog { width: min(520px, calc(100vw - 32px)); }
 .live-form { display: flex; flex-direction: column; gap: 14px; }
 .live-form .form-two { margin: 0; }
+.live-form-two { align-items: start; }
+.live-times-control { min-width: 0; }
+.live-time-list { display: flex; flex-direction: column; gap: 7px; }
+.live-time-row { display: flex; align-items: center; gap: 6px; }
+.live-time-row input { flex: 1; min-width: 0; }
+.live-time-remove { width: 31px; height: 31px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.live-time-remove:hover { border-color: #f0d5cd; background: #fdf1ed; color: var(--coral-dark); }
+.live-time-remove[hidden] { display: none !important; }
+.live-add-time { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; border: 0; background: none; color: #3a7899; font-size: 10.5px; cursor: pointer; }
+.live-add-time:hover { color: #245a78; }
+.live-add-time .icon { width: 12px; height: 12px; }
+.live-time-values { display: flex; flex-wrap: wrap; gap: 4px; }
+.live-time-chip { display: inline-block; padding: 2px 6px; border: 1px solid #d6e9f5; border-radius: 6px; background: #eef8fe; color: #2f6f8e; font-size: 11.5px; font-variant-numeric: tabular-nums; }
 .live-form-hint { margin: -2px 0 0; color: var(--muted-light); font-size: 11px; line-height: 1.6; }
 .live-dialog .modal-foot { justify-content: space-between; }
 .live-dialog .modal-foot-actions { margin-left: auto; }
@@ -1989,15 +2002,19 @@ body{background:var(--paper)}
       <label class="control"><span>店铺</span>
         <input id="liveShop" type="text" maxlength="40" placeholder="例如：天猫旗舰店" autocomplete="off" required>
       </label>
-      <div class="form-two">
-        <label class="control"><span>开播时间 <em>24 小时制</em></span>
-          <input id="liveStart" type="time" step="60" required>
-        </label>
+      <div class="form-two live-form-two">
+        <div class="control live-times-control">
+          <span>开播时间 <em>24 小时制，可添加多个</em></span>
+          <div class="live-time-list" id="liveTimes"></div>
+          <button type="button" class="live-add-time" id="liveAddTime">
+            <svg class="icon"><use href="#i-plus"/></svg><span>添加一个时间</span>
+          </button>
+        </div>
         <label class="control"><span>直播计划创建到</span>
           <input id="liveThrough" type="date" required>
         </label>
       </div>
-      <p class="live-form-hint">开播时间只填几点几分，例如 19:30；再填写计划已经排到的日期。</p>
+      <p class="live-form-hint">开播时间只填几点几分，例如 19:30；有多个时段就继续添加。计划覆盖日期只填一个。</p>
     </form>
   </div>
   <div class="modal-foot">
@@ -2636,21 +2653,28 @@ body{background:var(--paper)}
     };
   }
 
+  function validLiveTime(value) {
+    return typeof value === "string" && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+  }
+
   function normalizeLivePlan(raw, index = 0) {
     const now = new Date().toISOString();
     const created = raw && parseDate(raw.createdAt) ? new Date(raw.createdAt).toISOString() : now;
-    let startTime = raw && typeof raw.startTime === "string" && /^\d{2}:\d{2}$/.test(raw.startTime)
-      ? raw.startTime : "";
-    if (!startTime && raw && raw.startAt) {
+    const times = [];
+    if (raw && Array.isArray(raw.startTimes)) {
+      raw.startTimes.forEach(t => { if (validLiveTime(t)) times.push(t); });
+    }
+    if (raw && validLiveTime(raw.startTime)) times.push(raw.startTime);
+    if (!times.length && raw && raw.startAt) {
       const legacy = parseDate(raw.startAt);
-      if (legacy) startTime = pad(legacy.getHours()) + ":" + pad(legacy.getMinutes());
+      if (legacy) times.push(pad(legacy.getHours()) + ":" + pad(legacy.getMinutes()));
     }
     const through = raw && typeof raw.planThrough === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.planThrough)
       ? raw.planThrough : "";
     return {
       id: raw && typeof raw.id === "string" && raw.id ? raw.id : uid() + "_live_" + index,
       shop: String((raw && raw.shop) || "未命名店铺").trim().slice(0, 40) || "未命名店铺",
-      startTime,
+      startTimes: [...new Set(times)].sort(),
       planThrough: through,
       demo: !!(raw && raw.demo),
       createdAt: created,
@@ -3774,10 +3798,6 @@ body{background:var(--paper)}
     return state.livePlans.find(p => p.id === id) || null;
   }
 
-  function liveStartText(value) {
-    return value || "未设置";
-  }
-
   function liveThroughText(value) {
     if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return "未设置";
     const [y, m, d] = value.split("-").map(Number);
@@ -3795,13 +3815,13 @@ body{background:var(--paper)}
     const plans = all
       .filter(p => !query || p.shop.toLowerCase().includes(query))
       .sort((a, b) => {
-        const as = a.startTime || "99:99";
-        const bs = b.startTime || "99:99";
+        const as = (a.startTimes && a.startTimes[0]) || "99:99";
+        const bs = (b.startTimes && b.startTimes[0]) || "99:99";
         return as.localeCompare(bs) || a.shop.localeCompare(b.shop, "zh");
       });
 
     const shops = new Set(all.map(p => p.shop));
-    const withTime = all.filter(p => !!p.startTime).length;
+    const withTime = all.reduce((sum, p) => sum + (p.startTimes || []).length, 0);
     const coverage = all.map(p => p.planThrough).filter(v => /^\d{4}-\d{2}-\d{2}$/.test(v || "")).sort().pop();
     const renew = all.filter(p => liveThroughWarn(p.planThrough)).length;
 
@@ -3827,9 +3847,10 @@ body{background:var(--paper)}
     } else {
       $("#liveList").innerHTML = plans.map(p => {
         const warn = liveThroughWarn(p.planThrough);
+        const timeChips = (p.startTimes || []).map(t => '<span class="live-time-chip">' + esc(t) + '</span>').join("");
         return '<div class="live-row" data-live-id="' + esc(p.id) + '">' +
           '<div class="live-shop"><span class="live-shop-dot"></span><div><b>' + esc(p.shop) + '</b><small>店铺</small></div></div>' +
-          '<div class="live-time"><b>' + esc(liveStartText(p.startTime)) + '</b><small>开播时间</small></div>' +
+          '<div class="live-time"><div class="live-time-values">' + (timeChips || '<b>未设置</b>') + '</div><small>开播时间</small></div>' +
           '<div class="live-plan"><b>' + esc(liveThroughText(p.planThrough)) + '</b><span class="live-chip' + (warn ? " is-warn" : "") + '">' + (warn ? "待续排" : "已排到") + '</span><small>计划创建到</small></div>' +
           '<div class="live-actions">' +
             '<button class="live-action" data-live-edit="' + esc(p.id) + '" title="编辑" aria-label="编辑"><svg class="icon"><use href="#i-edit"/></svg></button>' +
@@ -3848,31 +3869,64 @@ body{background:var(--paper)}
     $("#liveShop").value = plan ? plan.shop : "";
     const now = new Date();
     const defaultThrough = addDays(now, 14);
-    $("#liveStart").value = plan ? (plan.startTime || "19:30") : "19:30";
+    renderLiveTimeInputs(plan && plan.startTimes && plan.startTimes.length ? plan.startTimes : ["19:30"]);
     $("#liveThrough").value = plan ? plan.planThrough : localKey(defaultThrough);
     $("#liveDelete").hidden = !plan;
     $("#liveDialog").showModal();
     setTimeout(() => $("#liveShop").focus(), 40);
   }
 
+  function nextLiveTime(times) {
+    if (!times.length) return "19:30";
+    const last = times[times.length - 1];
+    const [h, m] = last.split(":").map(Number);
+    const next = new Date(2000, 0, 1, h, m + 60, 0, 0);
+    return pad(next.getHours()) + ":" + pad(next.getMinutes());
+  }
+
+  function renderLiveTimeInputs(times) {
+    const list = times.length ? times : ["19:30"];
+    $("#liveTimes").innerHTML = list.map((t, i) =>
+      '<div class="live-time-row">' +
+        '<input class="live-time-input" type="time" step="60" value="' + esc(t) + '" aria-label="开播时间 ' + (i + 1) + '">' +
+        '<button type="button" class="live-time-remove" data-remove-time title="移除这个时间" aria-label="移除这个时间" ' + (list.length === 1 ? "hidden" : "") + '>' +
+          '<svg class="icon"><use href="#i-close"/></svg>' +
+        '</button>' +
+      '</div>'
+    ).join("");
+    updateLiveTimeRemoveButtons();
+  }
+
+  function updateLiveTimeRemoveButtons() {
+    const rows = $$(".live-time-row", $("#liveTimes"));
+    rows.forEach(row => {
+      const btn = $(".live-time-remove", row);
+      if (btn) btn.hidden = rows.length <= 1;
+    });
+  }
+
+  function collectLiveTimes() {
+    return [...new Set($$(".live-time-input", $("#liveTimes")).map(input => input.value).filter(validLiveTime))].sort();
+  }
+
   function saveLivePlan() {
     const shop = $("#liveShop").value.trim().slice(0, 40);
-    const startTime = $("#liveStart").value;
+    const startTimes = collectLiveTimes();
     const planThrough = $("#liveThrough").value;
     if (!shop) { showToast("先填写店铺名称"); $("#liveShop").focus(); return; }
-    if (!/^\d{2}:\d{2}$/.test(startTime)) { showToast("请选择开播时间"); $("#liveStart").focus(); return; }
+    if (!startTimes.length) { showToast("至少填写一个开播时间"); $("#liveTimes input").focus(); return; }
     if (!planThrough) { showToast("请选择计划创建到的日期"); $("#liveThrough").focus(); return; }
     const now = new Date().toISOString();
     if (liveEditId) {
       const plan = getLivePlan(liveEditId);
       if (!plan) return;
       plan.shop = shop;
-      plan.startTime = startTime;
+      plan.startTimes = startTimes;
       plan.planThrough = planThrough;
       plan.updatedAt = now;
     } else {
       state.livePlans.unshift(normalizeLivePlan({
-        id: uid(), shop, startTime, planThrough, createdAt: now, updatedAt: now
+        id: uid(), shop, startTimes, planThrough, createdAt: now, updatedAt: now
       }));
     }
     $("#liveDialog").close();
@@ -4882,6 +4936,21 @@ body{background:var(--paper)}
     $("#liveClose").addEventListener("click", () => { liveEditId = null; $("#liveDialog").close(); });
     $("#liveCancel").addEventListener("click", () => { liveEditId = null; $("#liveDialog").close(); });
     $("#liveForm").addEventListener("submit", e => { e.preventDefault(); saveLivePlan(); });
+    $("#liveAddTime").addEventListener("click", () => {
+      const times = collectLiveTimes();
+      if (times.length >= 8) { showToast("最多添加 8 个开播时间"); return; }
+      renderLiveTimeInputs([...times, nextLiveTime(times)]);
+      const inputs = $$(".live-time-input", $("#liveTimes"));
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    });
+    $("#liveTimes").addEventListener("click", e => {
+      const btn = e.target.closest("[data-remove-time]");
+      if (!btn) return;
+      const row = btn.closest(".live-time-row");
+      if (row) row.remove();
+      if (!$("#liveTimes").children.length) renderLiveTimeInputs(["19:30"]);
+      else updateLiveTimeRemoveButtons();
+    });
     $("#liveDelete").addEventListener("click", () => {
       const id = liveEditId;
       if (!id) return;

@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.10
+version: v1.0.11
 theme: blue
-change: live plan time only
+change: live plans support multiple times
