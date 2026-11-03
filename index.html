@@ -1826,9 +1826,9 @@ body{background:var(--paper)}
             <em>个正在排播</em>
           </div>
           <div class="live-stat">
-            <span>待开播</span>
-            <b id="liveUpcomingCount">0</b>
-            <em>场待开播</em>
+            <span>已排时间</span>
+            <b id="liveTimeCount">0</b>
+            <em>场已设置时间</em>
           </div>
           <div class="live-stat">
             <span>计划覆盖到</span>
@@ -1990,14 +1990,14 @@ body{background:var(--paper)}
         <input id="liveShop" type="text" maxlength="40" placeholder="例如：天猫旗舰店" autocomplete="off" required>
       </label>
       <div class="form-two">
-        <label class="control"><span>开播时间</span>
-          <input id="liveStart" type="datetime-local" required>
+        <label class="control"><span>开播时间 <em>24 小时制</em></span>
+          <input id="liveStart" type="time" step="60" required>
         </label>
         <label class="control"><span>直播计划创建到</span>
           <input id="liveThrough" type="date" required>
         </label>
       </div>
-      <p class="live-form-hint">填写直播计划已经排到的日期，后续可以随时续排。</p>
+      <p class="live-form-hint">开播时间只填几点几分，例如 19:30；再填写计划已经排到的日期。</p>
     </form>
   </div>
   <div class="modal-foot">
@@ -2639,13 +2639,18 @@ body{background:var(--paper)}
   function normalizeLivePlan(raw, index = 0) {
     const now = new Date().toISOString();
     const created = raw && parseDate(raw.createdAt) ? new Date(raw.createdAt).toISOString() : now;
-    const start = raw && parseDate(raw.startAt) ? toInputValue(new Date(raw.startAt)) : "";
+    let startTime = raw && typeof raw.startTime === "string" && /^\d{2}:\d{2}$/.test(raw.startTime)
+      ? raw.startTime : "";
+    if (!startTime && raw && raw.startAt) {
+      const legacy = parseDate(raw.startAt);
+      if (legacy) startTime = pad(legacy.getHours()) + ":" + pad(legacy.getMinutes());
+    }
     const through = raw && typeof raw.planThrough === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.planThrough)
       ? raw.planThrough : "";
     return {
       id: raw && typeof raw.id === "string" && raw.id ? raw.id : uid() + "_live_" + index,
       shop: String((raw && raw.shop) || "未命名店铺").trim().slice(0, 40) || "未命名店铺",
-      startAt: start,
+      startTime,
       planThrough: through,
       demo: !!(raw && raw.demo),
       createdAt: created,
@@ -3770,13 +3775,7 @@ body{background:var(--paper)}
   }
 
   function liveStartText(value) {
-    const d = parseDate(value);
-    if (!d) return "未设置";
-    const time = pad(d.getHours()) + ":" + pad(d.getMinutes());
-    const now = new Date();
-    if (localKey(d) === localKey(now)) return "今天 " + time;
-    if (localKey(d) === localKey(addDays(now, 1))) return "明天 " + time;
-    return (d.getMonth() + 1) + "月" + d.getDate() + "日 周" + "日一二三四五六"[d.getDay()] + " " + time;
+    return value || "未设置";
   }
 
   function liveThroughText(value) {
@@ -3796,26 +3795,25 @@ body{background:var(--paper)}
     const plans = all
       .filter(p => !query || p.shop.toLowerCase().includes(query))
       .sort((a, b) => {
-        const as = a.startAt || "9999-12-31T23:59";
-        const bs = b.startAt || "9999-12-31T23:59";
+        const as = a.startTime || "99:99";
+        const bs = b.startTime || "99:99";
         return as.localeCompare(bs) || a.shop.localeCompare(b.shop, "zh");
       });
 
     const shops = new Set(all.map(p => p.shop));
-    const nowKey = toInputValue(new Date());
-    const upcoming = all.filter(p => p.startAt && p.startAt >= nowKey).length;
+    const withTime = all.filter(p => !!p.startTime).length;
     const coverage = all.map(p => p.planThrough).filter(v => /^\d{4}-\d{2}-\d{2}$/.test(v || "")).sort().pop();
     const renew = all.filter(p => liveThroughWarn(p.planThrough)).length;
 
     $("#liveShopCount").textContent = shops.size;
-    $("#liveUpcomingCount").textContent = upcoming;
+    $("#liveTimeCount").textContent = withTime;
     $("#liveCoverage").textContent = coverage ? liveThroughText(coverage) : "—";
     $("#liveRenewCount").textContent = renew;
     $("#liveRenewStat").classList.toggle("is-warn", renew > 0);
     $("#liveSubtitle").textContent = query
       ? "找到 " + plans.length + " 条匹配的计划"
       : all.length
-        ? all.length + " 条计划 · " + shops.size + " 个店铺 · " + upcoming + " 场待开播"
+        ? all.length + " 条计划 · " + shops.size + " 个店铺"
         : "记录每个店铺的开播时间，确认直播计划已经创建到哪一天。";
 
     const empty = $("#liveEmpty");
@@ -3828,12 +3826,10 @@ body{background:var(--paper)}
         : "先把店铺、开播时间和计划覆盖日期记下来，后续一眼就知道哪家需要续排。";
     } else {
       $("#liveList").innerHTML = plans.map(p => {
-        const start = parseDate(p.startAt);
-        const past = start && start.getTime() < Date.now();
         const warn = liveThroughWarn(p.planThrough);
         return '<div class="live-row" data-live-id="' + esc(p.id) + '">' +
           '<div class="live-shop"><span class="live-shop-dot"></span><div><b>' + esc(p.shop) + '</b><small>店铺</small></div></div>' +
-          '<div class="live-time' + (past ? " is-past" : "") + '"><b>' + esc(liveStartText(p.startAt)) + '</b><small>开播时间</small></div>' +
+          '<div class="live-time"><b>' + esc(liveStartText(p.startTime)) + '</b><small>开播时间</small></div>' +
           '<div class="live-plan"><b>' + esc(liveThroughText(p.planThrough)) + '</b><span class="live-chip' + (warn ? " is-warn" : "") + '">' + (warn ? "待续排" : "已排到") + '</span><small>计划创建到</small></div>' +
           '<div class="live-actions">' +
             '<button class="live-action" data-live-edit="' + esc(p.id) + '" title="编辑" aria-label="编辑"><svg class="icon"><use href="#i-edit"/></svg></button>' +
@@ -3851,11 +3847,8 @@ body{background:var(--paper)}
     $("#liveDialogTitle").textContent = plan ? "编辑直播计划" : "新建直播计划";
     $("#liveShop").value = plan ? plan.shop : "";
     const now = new Date();
-    const defaultStart = new Date(now);
-    defaultStart.setHours(19, 30, 0, 0);
-    if (defaultStart.getTime() < now.getTime()) defaultStart.setDate(defaultStart.getDate() + 1);
     const defaultThrough = addDays(now, 14);
-    $("#liveStart").value = plan ? plan.startAt : toInputValue(defaultStart);
+    $("#liveStart").value = plan ? (plan.startTime || "19:30") : "19:30";
     $("#liveThrough").value = plan ? plan.planThrough : localKey(defaultThrough);
     $("#liveDelete").hidden = !plan;
     $("#liveDialog").showModal();
@@ -3864,22 +3857,22 @@ body{background:var(--paper)}
 
   function saveLivePlan() {
     const shop = $("#liveShop").value.trim().slice(0, 40);
-    const startAt = $("#liveStart").value;
+    const startTime = $("#liveStart").value;
     const planThrough = $("#liveThrough").value;
     if (!shop) { showToast("先填写店铺名称"); $("#liveShop").focus(); return; }
-    if (!startAt || !parseDate(startAt)) { showToast("请选择开播时间"); $("#liveStart").focus(); return; }
+    if (!/^\d{2}:\d{2}$/.test(startTime)) { showToast("请选择开播时间"); $("#liveStart").focus(); return; }
     if (!planThrough) { showToast("请选择计划创建到的日期"); $("#liveThrough").focus(); return; }
     const now = new Date().toISOString();
     if (liveEditId) {
       const plan = getLivePlan(liveEditId);
       if (!plan) return;
       plan.shop = shop;
-      plan.startAt = startAt;
+      plan.startTime = startTime;
       plan.planThrough = planThrough;
       plan.updatedAt = now;
     } else {
       state.livePlans.unshift(normalizeLivePlan({
-        id: uid(), shop, startAt, planThrough, createdAt: now, updatedAt: now
+        id: uid(), shop, startTime, planThrough, createdAt: now, updatedAt: now
       }));
     }
     $("#liveDialog").close();

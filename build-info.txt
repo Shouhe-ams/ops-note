@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.9
+version: v1.0.10
 theme: blue
-change: add live plan board
+change: live plan time only
