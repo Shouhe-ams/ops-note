@@ -1523,6 +1523,7 @@ body{background:var(--paper)}
 .live-shop { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .live-shop-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 4px rgba(143,216,255,.16); }
 .live-shop b { display: block; overflow: hidden; color: var(--ink); font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.live-shop-note { display: block; overflow: hidden; max-width: 230px; margin-top: 2px; color: var(--muted); font-size: 10.5px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
 .live-shop small, .live-time small, .live-plan small { display: none; color: var(--muted-light); font-size: 10px; }
 .live-time b, .live-plan b { display: block; color: var(--ink-soft); font-size: 12.5px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .live-time.is-past b { color: var(--muted); text-decoration: line-through; }
@@ -2014,6 +2015,9 @@ body{background:var(--paper)}
           <input id="liveThrough" type="date" required>
         </label>
       </div>
+      <label class="control"><span>备注 <em>可选</em></span>
+        <textarea id="liveNotes" maxlength="500" placeholder="例如：本周主推新品、重点场次、需要对接的人…"></textarea>
+      </label>
       <p class="live-form-hint">开播时间只填几点几分，例如 19:30；有多个时段就继续添加。计划覆盖日期只填一个。</p>
     </form>
   </div>
@@ -2676,6 +2680,7 @@ body{background:var(--paper)}
       shop: String((raw && raw.shop) || "未命名店铺").trim().slice(0, 40) || "未命名店铺",
       startTimes: [...new Set(times)].sort(),
       planThrough: through,
+      notes: String((raw && raw.notes) || "").slice(0, 500),
       demo: !!(raw && raw.demo),
       createdAt: created,
       updatedAt: raw && parseDate(raw.updatedAt) ? new Date(raw.updatedAt).toISOString() : created
@@ -3815,7 +3820,7 @@ body{background:var(--paper)}
     const all = state.livePlans.slice();
     const query = state.query.toLowerCase();
     const plans = all
-      .filter(p => !query || p.shop.toLowerCase().includes(query))
+      .filter(p => !query || p.shop.toLowerCase().includes(query) || (p.notes || "").toLowerCase().includes(query))
       .sort((a, b) => {
         const as = (a.startTimes && a.startTimes[0]) || "99:99";
         const bs = (b.startTimes && b.startTimes[0]) || "99:99";
@@ -3844,14 +3849,15 @@ body{background:var(--paper)}
       $("#liveList").innerHTML = "";
       $("h3", empty).textContent = query ? "没有匹配的店铺" : "还没有直播计划";
       $("p", empty).textContent = query
-        ? "换一个店铺名试试，或清空搜索。"
+        ? "换一个店铺名或备注关键词试试，或清空搜索。"
         : "先把店铺、开播时间和计划覆盖日期记下来，后续一眼就知道哪家需要续排。";
     } else {
       $("#liveList").innerHTML = plans.map(p => {
         const warn = liveThroughWarn(p.planThrough);
         const timeChips = (p.startTimes || []).map(t => '<span class="live-time-chip">' + esc(t) + '</span>').join("");
+        const note = p.notes ? '<span class="live-shop-note" title="' + esc(p.notes) + '">' + esc(p.notes.replace(/\s+/g, " ")) + '</span>' : "";
         return '<div class="live-row" data-live-id="' + esc(p.id) + '">' +
-          '<div class="live-shop"><span class="live-shop-dot"></span><div><b>' + esc(p.shop) + '</b><small>店铺</small></div></div>' +
+          '<div class="live-shop"><span class="live-shop-dot"></span><div><b>' + esc(p.shop) + '</b>' + note + '<small>店铺</small></div></div>' +
           '<div class="live-time"><div class="live-time-values">' + (timeChips || '<b>未设置</b>') + '</div><small>开播时间</small></div>' +
           '<div class="live-plan"><b>' + esc(liveThroughText(p.planThrough)) + '</b><span class="live-chip' + (warn ? " is-warn" : "") + '">' + (warn ? "待续排" : "已排到") + '</span><small>计划创建到</small></div>' +
           '<div class="live-actions">' +
@@ -3869,6 +3875,7 @@ body{background:var(--paper)}
     if (id && !plan) return;
     $("#liveDialogTitle").textContent = plan ? "编辑直播计划" : "新建直播计划";
     $("#liveShop").value = plan ? plan.shop : "";
+    $("#liveNotes").value = plan ? (plan.notes || "") : "";
     const now = new Date();
     const defaultThrough = addDays(now, 14);
     renderLiveTimeInputs(plan && plan.startTimes && plan.startTimes.length ? plan.startTimes : ["19:30"]);
@@ -3915,6 +3922,7 @@ body{background:var(--paper)}
     const shop = $("#liveShop").value.trim().slice(0, 40);
     const startTimes = collectLiveTimes();
     const planThrough = $("#liveThrough").value;
+    const notes = $("#liveNotes").value.trim().slice(0, 500);
     if (!shop) { showToast("先填写店铺名称"); $("#liveShop").focus(); return; }
     if (!startTimes.length) { showToast("至少填写一个开播时间"); $("#liveTimes input").focus(); return; }
     if (!planThrough) { showToast("请选择计划创建到的日期"); $("#liveThrough").focus(); return; }
@@ -3925,10 +3933,11 @@ body{background:var(--paper)}
       plan.shop = shop;
       plan.startTimes = startTimes;
       plan.planThrough = planThrough;
+      plan.notes = notes;
       plan.updatedAt = now;
     } else {
       state.livePlans.unshift(normalizeLivePlan({
-        id: uid(), shop, startTimes, planThrough, createdAt: now, updatedAt: now
+        id: uid(), shop, startTimes, planThrough, notes, createdAt: now, updatedAt: now
       }));
     }
     $("#liveDialog").close();
@@ -4869,7 +4878,7 @@ body{background:var(--paper)}
     state.query = "";
     $("#searchInput").value = "";
     $("#clearSearch").hidden = true;
-    $("#searchInput").placeholder = state.section === "live" ? "搜索店铺…" : "搜索标题、备注或标签…";
+    $("#searchInput").placeholder = state.section === "live" ? "搜索店铺或备注…" : "搜索标题、备注或标签…";
     closeSidebar();
     renderAll();
   }

@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.12
+version: v1.0.13
 theme: blue
-change: renewal warning two days ahead
+change: live plan notes
