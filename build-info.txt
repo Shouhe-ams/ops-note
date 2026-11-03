@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.11
+version: v1.0.12
 theme: blue
-change: live plans support multiple times
+change: renewal warning two days ahead

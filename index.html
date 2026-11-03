@@ -1848,7 +1848,7 @@ body{background:var(--paper)}
             <b class="live-stat-date" id="liveCoverage">—</b>
             <em>最远排期</em>
           </div>
-          <div class="live-stat is-warn" id="liveRenewStat">
+          <div class="live-stat is-warn" id="liveRenewStat" title="计划到期前 2 天开始预警">
             <span>待续排</span>
             <b id="liveRenewCount">0</b>
             <em>个店铺需要续排</em>
@@ -3806,7 +3806,9 @@ body{background:var(--paper)}
   }
 
   function liveThroughWarn(value) {
-    return !value || value < localKey();
+    if (!value) return true;
+    // 提前 2 天预警：例如计划排到 11 月 9 日，11 月 7 日就进入待续排。
+    return value <= localKey(addDays(new Date(), 2));
   }
 
   function renderLive() {
@@ -3834,7 +3836,7 @@ body{background:var(--paper)}
       ? "找到 " + plans.length + " 条匹配的计划"
       : all.length
         ? all.length + " 条计划 · " + shops.size + " 个店铺"
-        : "记录每个店铺的开播时间，确认直播计划已经创建到哪一天。";
+        : "记录每个店铺的开播时间；计划到期前 2 天会进入待续排。";
 
     const empty = $("#liveEmpty");
     empty.hidden = plans.length > 0;
