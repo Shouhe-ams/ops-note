@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.14
+version: v1.0.15
 theme: blue
-change: add activity board with two-day warning
+change: activity fields shop content notes
