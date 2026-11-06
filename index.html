@@ -1532,6 +1532,8 @@ body{background:var(--paper)}
 .live-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border: 1px solid #cde7e5; border-radius: 99px; background: #eaf7f6; color: #347a76; font-size: 9.5px; white-space: nowrap; }
 .live-chip::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
 .live-chip.is-warn { border-color: #f0d5cd; background: #fdf1ed; color: #b56b58; }
+.live-chip.is-ended { border-color: #e1e9ef; background: #f5f8fa; color: #8fa2b0; }
+.live-chip.is-upcoming { border-color: #d6e9f5; background: #eef8fe; color: #2f6f8e; }
 .live-actions { display: flex; justify-content: flex-end; gap: 5px; }
 .live-action { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; transition: .15s ease; }
 .live-action:hover { border-color: #c5d9e8; background: #edf7fd; color: var(--ink); }
@@ -1646,17 +1648,19 @@ body{background:var(--paper)}
     </nav>
 
     <div class="side-divider"></div>
-    <p class="nav-label">直播 <span>LIVE</span></p>
-    <nav class="nav-list" aria-label="直播计划">
+    <p class="nav-label">运营 <span>OPERATIONS</span></p>
+    <nav class="nav-list" aria-label="运营板块">
       <button class="nav-item" data-section="live" id="liveNav">
         <svg class="icon"><use href="#i-live"/></svg><span>直播计划</span><em id="countLive">0</em>
+      </button>
+      <button class="nav-item" data-section="activity" id="activityNav">
+        <svg class="icon"><use href="#i-calendar"/></svg><span>活动</span><em id="countActivity">0</em>
       </button>
     </nav>
 
     <div class="side-divider"></div>
     <p class="nav-label">分类 <span>CATEGORY</span></p>
     <div class="type-list" id="typeList">
-      <button class="type-item" data-type="活动"><span class="type-dot" style="--dot:#c66048"></span><span>活动</span><em data-type-count="活动">0</em></button>
       <button class="type-item" data-type="内容"><span class="type-dot" style="--dot:#c3983f"></span><span>内容</span><em data-type-count="内容">0</em></button>
       <button class="type-item" data-type="数据"><span class="type-dot" style="--dot:#4f8797"></span><span>数据</span><em data-type-count="数据">0</em></button>
       <button class="type-item" data-type="对接"><span class="type-dot" style="--dot:#8173ac"></span><span>对接</span><em data-type-count="对接">0</em></button>
@@ -1789,7 +1793,6 @@ body{background:var(--paper)}
             <div class="quick-foot">
               <select class="quick-type" id="quickType" aria-label="快速记录分类">
                 <option value="其他">其他</option>
-                <option value="活动">活动</option>
                 <option value="内容">内容</option>
                 <option value="数据">数据</option>
                 <option value="对接">对接</option>
@@ -1869,6 +1872,58 @@ body{background:var(--paper)}
             <h3>还没有直播计划</h3>
             <p>先把店铺、开播时间和计划覆盖日期记下来，后续一眼就知道哪家需要续排。</p>
             <button class="btn btn-primary" id="liveEmptyAdd"><svg class="icon"><use href="#i-plus"/></svg><span>新建第一条</span></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="live-board activity-board" id="activityBoard" hidden aria-label="活动">
+        <div class="live-hero">
+          <div>
+            <p class="eyebrow">CAMPAIGN</p>
+            <h2>活动</h2>
+            <p class="live-sub" id="activitySubtitle">管理活动时间和准备节奏；活动开始前 2 天进入预警。</p>
+          </div>
+          <button class="btn btn-primary" id="activityNewBtn">
+            <svg class="icon"><use href="#i-plus"/></svg><span>新建活动</span>
+          </button>
+        </div>
+
+        <div class="live-stats" aria-label="活动概览">
+          <div class="live-stat">
+            <span>活动</span>
+            <b id="activityCount">0</b>
+            <em>个活动记录</em>
+          </div>
+          <div class="live-stat is-warn" id="activitySoonStat" title="活动开始前 2 天开始预警">
+            <span>2 天内</span>
+            <b id="activitySoonCount">0</b>
+            <em>个活动待准备</em>
+          </div>
+          <div class="live-stat">
+            <span>今天</span>
+            <b id="activityTodayCount">0</b>
+            <em>个活动开始</em>
+          </div>
+          <div class="live-stat">
+            <span>已结束</span>
+            <b id="activityEndedCount">0</b>
+            <em>个活动</em>
+          </div>
+        </div>
+
+        <div class="live-table">
+          <div class="live-table-head">
+            <span>活动</span>
+            <span>活动时间</span>
+            <span>状态</span>
+            <span></span>
+          </div>
+          <div class="live-list" id="activityList"></div>
+          <div class="live-empty" id="activityEmpty" hidden>
+            <div class="live-empty-art"><svg class="icon"><use href="#i-calendar"/></svg></div>
+            <h3>还没有活动</h3>
+            <p>把活动名称、开始时间和备注记下来，开始前 2 天会自动进入待准备。</p>
+            <button class="btn btn-primary" id="activityEmptyAdd"><svg class="icon"><use href="#i-plus"/></svg><span>新建第一个活动</span></button>
           </div>
         </div>
       </section>
@@ -1952,7 +2007,7 @@ body{background:var(--paper)}
       </label>
       <div class="form-two">
         <label class="control"><span>分类</span>
-          <select id="fType"><option>活动</option><option>内容</option><option>数据</option><option>对接</option><option>复盘</option><option>其他</option></select>
+          <select id="fType"><option>内容</option><option>数据</option><option>对接</option><option>复盘</option><option>其他</option></select>
         </label>
         <div class="control"><span>优先级</span>
           <div class="segmented" id="fPriority" role="group" aria-label="优先级">
@@ -2028,6 +2083,39 @@ body{background:var(--paper)}
     <div class="modal-foot-actions">
       <button class="btn" id="liveCancel" type="button">取消</button>
       <button class="btn btn-primary" id="liveSave" type="submit" form="liveForm">保存</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="memo-dialog live-dialog" id="activityDialog">
+  <div class="modal-head">
+    <div>
+      <p class="eyebrow">CAMPAIGN</p>
+      <h2 id="activityDialogTitle">新建活动</h2>
+    </div>
+    <button class="icon-btn" id="activityClose" aria-label="关闭"><svg class="icon"><use href="#i-close"/></svg></button>
+  </div>
+  <div class="modal-body">
+    <form class="live-form" id="activityForm">
+      <label class="control"><span>活动名称</span>
+        <input id="activityName" type="text" maxlength="80" placeholder="例如：双 11 会员日" autocomplete="off" required>
+      </label>
+      <label class="control"><span>活动时间</span>
+        <input id="activityStart" type="datetime-local" required>
+      </label>
+      <label class="control"><span>备注 <em>可选</em></span>
+        <textarea id="activityNotes" maxlength="500" placeholder="例如：主推品、会场安排、需要提前准备的物料…"></textarea>
+      </label>
+      <p class="live-form-hint">活动开始前 2 天会自动进入预警。</p>
+    </form>
+  </div>
+  <div class="modal-foot">
+    <button class="btn danger live-delete" id="activityDelete" type="button" hidden>
+      <svg class="icon"><use href="#i-trash"/></svg><span>删除</span>
+    </button>
+    <div class="modal-foot-actions">
+      <button class="btn" id="activityCancel" type="button">取消</button>
+      <button class="btn btn-primary" id="activitySave" type="submit" form="activityForm">保存</button>
     </div>
   </div>
 </dialog>
@@ -2530,7 +2618,7 @@ body{background:var(--paper)}
 
   const TEMPLATES = [
     {
-      id: "activity", name: "活动上线检查", glyph: "活", type: "活动", priority: "high",
+      id: "activity", name: "活动上线检查", glyph: "活", type: "其他", priority: "high",
       title: "活动上线前检查",
       notes: "上线前 2 小时逐项确认，任何一项异常先在项目群同步，再决定是否延期。",
       dueMode: "today1930", repeat: "none",
@@ -2572,10 +2660,12 @@ body{background:var(--paper)}
   const state = {
     memos: [],
     livePlans: [],
+    activities: [],
     reviews: {},
     deleted: {},
     deletedReviews: {},
     deletedLive: {},
+    deletedActivities: {},
     section: "memos",
     filter: "today",
     typeFilter: null,
@@ -2591,6 +2681,7 @@ body{background:var(--paper)}
 
   let persistTimer = null;
   let liveEditId = null;
+  let activityEditId = null;
   let feedTimer = null;
   let toastTimer = null;
   let toastCallback = null;
@@ -2687,6 +2778,20 @@ body{background:var(--paper)}
     };
   }
 
+  function normalizeActivity(raw, index = 0) {
+    const now = new Date().toISOString();
+    const created = raw && parseDate(raw.createdAt) ? new Date(raw.createdAt).toISOString() : now;
+    return {
+      id: raw && typeof raw.id === "string" && raw.id ? raw.id : uid() + "_activity_" + index,
+      name: String((raw && raw.name) || "未命名活动").trim().slice(0, 80) || "未命名活动",
+      startAt: raw && parseDate(raw.startAt) ? toInputValue(new Date(raw.startAt)) : "",
+      notes: String((raw && raw.notes) || "").slice(0, 500),
+      demo: !!(raw && raw.demo),
+      createdAt: created,
+      updatedAt: raw && parseDate(raw.updatedAt) ? new Date(raw.updatedAt).toISOString() : created
+    };
+  }
+
   function normalizeDeletedMap(raw) {
     const out = {};
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
@@ -2710,6 +2815,8 @@ body{background:var(--paper)}
         state.memos = list.map(normalizeMemo);
         state.livePlans = parsed && Array.isArray(parsed.livePlans)
           ? parsed.livePlans.map(normalizeLivePlan) : [];
+        state.activities = parsed && Array.isArray(parsed.activities)
+          ? parsed.activities.map(normalizeActivity) : [];
         if (parsed && parsed.demo) {
           // 旧版本示例数据没有 demo 标记；按标题补标记，避免老示例被同步到云端。
           state.memos.forEach(memo => {
@@ -2721,6 +2828,7 @@ body{background:var(--paper)}
         state.deleted = normalizeDeletedMap(parsed && parsed.deleted);
         state.deletedReviews = normalizeDeletedMap(parsed && parsed.deletedReviews);
         state.deletedLive = normalizeDeletedMap(parsed && parsed.deletedLive);
+        state.deletedActivities = normalizeDeletedMap(parsed && parsed.deletedActivities);
         state.isDemo = !!(parsed && parsed.demo);
       }
     } catch (err) {
@@ -2741,10 +2849,12 @@ body{background:var(--paper)}
         demo: state.isDemo,
         memos: state.memos,
         livePlans: state.livePlans,
+        activities: state.activities,
         reviews: state.reviews,
         deleted: state.deleted,
         deletedReviews: state.deletedReviews,
-        deletedLive: state.deletedLive
+        deletedLive: state.deletedLive,
+        deletedActivities: state.deletedActivities
       }));
     } catch (err) {
       console.warn("保存失败", err);
@@ -2935,10 +3045,12 @@ body{background:var(--paper)}
       schemaVersion: 1,
       memos: Array.isArray(source.memos) ? source.memos.map((memo, index) => normalizeMemo(memo, index)).filter(memo => !memo.demo) : [],
       livePlans: Array.isArray(source.livePlans) ? source.livePlans.map((plan, index) => normalizeLivePlan(plan, index)).filter(plan => !plan.demo) : [],
+      activities: Array.isArray(source.activities) ? source.activities.map((activity, index) => normalizeActivity(activity, index)).filter(activity => !activity.demo) : [],
       reviews: source.reviews && typeof source.reviews === "object" && !Array.isArray(source.reviews) ? source.reviews : {},
       deleted: normalizeDeletedMap(source.deleted),
       deletedReviews: normalizeDeletedMap(source.deletedReviews),
-      deletedLive: normalizeDeletedMap(source.deletedLive)
+      deletedLive: normalizeDeletedMap(source.deletedLive),
+      deletedActivities: normalizeDeletedMap(source.deletedActivities)
     };
   }
 
@@ -2946,10 +3058,12 @@ body{background:var(--paper)}
     return normalizeCloudData({
       memos: state.memos.filter(memo => !memo.demo),
       livePlans: state.livePlans.filter(plan => !plan.demo),
+      activities: state.activities.filter(activity => !activity.demo),
       reviews: state.reviews,
       deleted: state.deleted,
       deletedReviews: state.deletedReviews,
-      deletedLive: state.deletedLive
+      deletedLive: state.deletedLive,
+      deletedActivities: state.deletedActivities
     });
   }
 
@@ -3002,6 +3116,30 @@ body{background:var(--paper)}
       else deletedLive[id] = winner.atIso;
     });
 
+    const localActivities = new Map(local.activities.map(a => [a.id, a]));
+    const remoteActivities = new Map(remote.activities.map(a => [a.id, a]));
+    const activityIds = new Set([
+      ...localActivities.keys(), ...remoteActivities.keys(),
+      ...Object.keys(local.deletedActivities), ...Object.keys(remote.deletedActivities)
+    ]);
+    const activities = [];
+    const deletedActivities = {};
+
+    activityIds.forEach(id => {
+      const events = [];
+      const la = localActivities.get(id);
+      const ra = remoteActivities.get(id);
+      if (la) events.push({ at: parseDate(la.updatedAt)?.getTime() || 0, rank: 1, type: "activity", activity: la });
+      if (ra) events.push({ at: parseDate(ra.updatedAt)?.getTime() || 0, rank: 2, type: "activity", activity: ra });
+      if (local.deletedActivities[id]) events.push({ at: parseDate(local.deletedActivities[id])?.getTime() || 0, rank: 3, type: "delete", atIso: local.deletedActivities[id] });
+      if (remote.deletedActivities[id]) events.push({ at: parseDate(remote.deletedActivities[id])?.getTime() || 0, rank: 4, type: "delete", atIso: remote.deletedActivities[id] });
+      if (!events.length) return;
+      events.sort((a, b) => (a.at - b.at) || (a.rank - b.rank));
+      const winner = events[events.length - 1];
+      if (winner.type === "activity") activities.push(winner.activity);
+      else deletedActivities[id] = winner.atIso;
+    });
+
     const localReviews = local.reviews || {};
     const remoteReviews = remote.reviews || {};
     const dates = new Set([
@@ -3030,10 +3168,12 @@ body{background:var(--paper)}
       schemaVersion: 1,
       memos,
       livePlans,
+      activities,
       reviews,
       deleted,
       deletedReviews,
-      deletedLive
+      deletedLive,
+      deletedActivities
     };
   }
 
@@ -3053,20 +3193,24 @@ body{background:var(--paper)}
       schemaVersion: 1,
       memos: data.memos.slice().sort((a, b) => a.id.localeCompare(b.id)),
       livePlans: data.livePlans.slice().sort((a, b) => a.id.localeCompare(b.id)),
+      activities: data.activities.slice().sort((a, b) => a.id.localeCompare(b.id)),
       reviews: data.reviews,
       deleted: data.deleted,
       deletedReviews: data.deletedReviews,
-      deletedLive: data.deletedLive
+      deletedLive: data.deletedLive,
+      deletedActivities: data.deletedActivities
     }));
   }
 
   function applyCloudData(data) {
     state.memos = data.memos.map((memo, index) => normalizeMemo(memo, index));
     state.livePlans = (data.livePlans || []).map((plan, index) => normalizeLivePlan(plan, index));
+    state.activities = (data.activities || []).map((activity, index) => normalizeActivity(activity, index));
     state.reviews = data.reviews || {};
     state.deleted = data.deleted || {};
     state.deletedReviews = data.deletedReviews || {};
     state.deletedLive = data.deletedLive || {};
+    state.deletedActivities = data.deletedActivities || {};
     if (state.openId && !getMemo(state.openId)) closeDrawer();
     saveNow({ skipCloud: true });
     renderAll();
@@ -3530,6 +3674,20 @@ body{background:var(--paper)}
   function renderHeader() {
     const now = new Date();
     $("#dateLabel").textContent = weekdayEn(now) + " · " + now.getDate() + " " + monthEn(now) + " " + now.getFullYear() + " · W" + pad(weekNumber(now));
+    if (state.section === "activity") {
+      const total = state.activities.length;
+      const soon = state.activities.filter(a => {
+        const s = activityStatus(a);
+        return s.key !== "ended" && s.key !== "unknown" && s.days <= 2;
+      }).length;
+      $("#greetingSub").innerHTML = total
+        ? "已记录 <b>" + total + "</b> 个活动" + (soon ? "，其中 <b class=\"warn\">" + soon + "</b> 个在 2 天内开始。" : "。")
+        : "把活动名称、开始时间和备注记下来，开始前 2 天会预警。";
+      $("#demoPill").hidden = true;
+      $("#crumbCurrent").textContent = "活动";
+      document.title = "活动 · OPS NOTE";
+      return;
+    }
     if (state.section === "live") {
       const total = state.livePlans.length;
       const shops = new Set(state.livePlans.map(p => p.shop)).size;
@@ -3603,10 +3761,12 @@ body{background:var(--paper)}
     $("#countDone").textContent = state.memos.filter(m => m.status === "done").length;
     const countLive = $("#countLive");
     if (countLive) countLive.textContent = state.livePlans.length;
+    const countActivity = $("#countActivity");
+    if (countActivity) countActivity.textContent = state.activities.length;
 
     $$(".nav-item").forEach(btn => {
-      if (btn.dataset.section === "live") {
-        btn.classList.toggle("active", state.section === "live");
+      if (btn.dataset.section) {
+        btn.classList.toggle("active", state.section === btn.dataset.section);
       } else {
         btn.classList.toggle("active", state.section === "memos" && btn.dataset.filter === state.filter && !state.typeFilter);
       }
@@ -3960,23 +4120,171 @@ body{background:var(--paper)}
     });
   }
 
+  function getActivity(id) {
+    return state.activities.find(a => a.id === id) || null;
+  }
+
+  function activityStartText(value) {
+    const d = parseDate(value);
+    if (!d) return "未设置";
+    return (d.getMonth() + 1) + "月" + d.getDate() + "日 周" + "日一二三四五六"[d.getDay()] + " " +
+      pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  function activityDays(value) {
+    const d = parseDate(value);
+    if (!d) return null;
+    return Math.round((startOfDay(d).getTime() - startOfDay(new Date()).getTime()) / 86400000);
+  }
+
+  function activityStatus(activity) {
+    const days = activityDays(activity.startAt);
+    if (days === null) return { key: "unknown", label: "未设置", cls: "is-ended", days };
+    if (days < 0) return { key: "ended", label: "已结束", cls: "is-ended", days };
+    if (days === 0) return { key: "today", label: "今天", cls: "is-warn", days };
+    if (days <= 2) return { key: "soon", label: days + "天后", cls: "is-warn", days };
+    return { key: "upcoming", label: "还有 " + days + " 天", cls: "is-upcoming", days };
+  }
+
+  function renderActivity() {
+    const all = state.activities.slice();
+    const query = state.query.toLowerCase();
+    const list = all
+      .filter(a => !query || a.name.toLowerCase().includes(query) || (a.notes || "").toLowerCase().includes(query))
+      .sort((a, b) => {
+        const as = activityStatus(a);
+        const bs = activityStatus(b);
+        const rank = s => s.key === "ended" ? 2 : s.key === "unknown" ? 1 : 0;
+        return (rank(as) - rank(bs)) || String(a.startAt).localeCompare(String(b.startAt)) || a.name.localeCompare(b.name, "zh");
+      });
+
+    const counts = { total: all.length, soon: 0, today: 0, ended: 0 };
+    all.forEach(a => {
+      const s = activityStatus(a);
+      if (s.key === "ended" || s.key === "unknown") counts.ended += 1;
+      else {
+        if (s.days <= 2) counts.soon += 1;
+        if (s.days === 0) counts.today += 1;
+      }
+    });
+
+    $("#activityCount").textContent = counts.total;
+    $("#activitySoonCount").textContent = counts.soon;
+    $("#activityTodayCount").textContent = counts.today;
+    $("#activityEndedCount").textContent = counts.ended;
+    $("#activitySoonStat").classList.toggle("is-warn", counts.soon > 0);
+    $("#activitySubtitle").textContent = query
+      ? "找到 " + list.length + " 个匹配的活动"
+      : all.length
+        ? all.length + " 个活动 · " + counts.soon + " 个在 2 天内开始"
+        : "管理活动时间和准备节奏；活动开始前 2 天进入预警。";
+
+    const empty = $("#activityEmpty");
+    empty.hidden = list.length > 0;
+    if (!list.length) {
+      $("#activityList").innerHTML = "";
+      $("h3", empty).textContent = query ? "没有匹配的活动" : "还没有活动";
+      $("p", empty).textContent = query
+        ? "换一个活动名或备注关键词试试，或清空搜索。"
+        : "把活动名称、开始时间和备注记下来，开始前 2 天会自动进入待准备。";
+    } else {
+      $("#activityList").innerHTML = list.map(a => {
+        const s = activityStatus(a);
+        const note = a.notes ? '<span class="live-shop-note" title="' + esc(a.notes) + '">' + esc(a.notes.replace(/\s+/g, " ")) + '</span>' : "";
+        return '<div class="live-row" data-activity-id="' + esc(a.id) + '">' +
+          '<div class="live-shop"><span class="live-shop-dot"></span><div><b>' + esc(a.name) + '</b>' + note + '<small>活动</small></div></div>' +
+          '<div class="live-time"><b>' + esc(activityStartText(a.startAt)) + '</b><small>活动时间</small></div>' +
+          '<div class="live-plan"><span class="live-chip ' + s.cls + '">' + esc(s.label) + '</span><small>状态</small></div>' +
+          '<div class="live-actions">' +
+            '<button class="live-action" data-activity-edit="' + esc(a.id) + '" title="编辑" aria-label="编辑"><svg class="icon"><use href="#i-edit"/></svg></button>' +
+            '<button class="live-action danger" data-activity-delete="' + esc(a.id) + '" title="删除" aria-label="删除"><svg class="icon"><use href="#i-trash"/></svg></button>' +
+          '</div>' +
+        '</div>';
+      }).join("");
+    }
+  }
+
+  function openActivityDialog(id = null) {
+    liveEditId = null;
+    activityEditId = id;
+    const activity = id ? getActivity(id) : null;
+    if (id && !activity) return;
+    $("#activityDialogTitle").textContent = activity ? "编辑活动" : "新建活动";
+    $("#activityName").value = activity ? activity.name : "";
+    $("#activityNotes").value = activity ? (activity.notes || "") : "";
+    const now = new Date();
+    const defaultStart = addDays(now, 1);
+    defaultStart.setHours(19, 30, 0, 0);
+    $("#activityStart").value = activity ? activity.startAt : toInputValue(defaultStart);
+    $("#activityDelete").hidden = !activity;
+    $("#activityDialog").showModal();
+    setTimeout(() => $("#activityName").focus(), 40);
+  }
+
+  function saveActivity() {
+    const name = $("#activityName").value.trim().slice(0, 80);
+    const startAt = $("#activityStart").value;
+    const notes = $("#activityNotes").value.trim().slice(0, 500);
+    if (!name) { showToast("先填写活动名称"); $("#activityName").focus(); return; }
+    if (!startAt || !parseDate(startAt)) { showToast("请选择活动时间"); $("#activityStart").focus(); return; }
+    const now = new Date().toISOString();
+    if (activityEditId) {
+      const activity = getActivity(activityEditId);
+      if (!activity) return;
+      activity.name = name;
+      activity.startAt = startAt;
+      activity.notes = notes;
+      activity.updatedAt = now;
+    } else {
+      state.activities.unshift(normalizeActivity({
+        id: uid(), name, startAt, notes, createdAt: now, updatedAt: now
+      }));
+    }
+    $("#activityDialog").close();
+    activityEditId = null;
+    saveNow();
+    renderAll();
+    showToast("活动已保存");
+  }
+
+  function deleteActivity(id) {
+    const activity = getActivity(id);
+    if (!activity) return;
+    askConfirm("删除活动", "删除「" + activity.name + "」？", "删除", () => {
+      state.deletedActivities[id] = new Date().toISOString();
+      state.activities = state.activities.filter(a => a.id !== id);
+      if (activityEditId === id) { activityEditId = null; $("#activityDialog").close(); }
+      saveNow();
+      renderAll();
+      showToast("活动已删除");
+    });
+  }
+
   function renderAll() {
     renderHeader();
     renderSidebar();
     renderCloud();
     const live = state.section === "live";
+    const activity = state.section === "activity";
+    const special = live || activity;
     const stats = $("#statsGrid");
     const workspace = $("#workspace");
     const board = $("#liveBoard");
+    const activityBoard = $("#activityBoard");
     const actions = $("#pageHeadActions");
-    if (stats) stats.hidden = live;
-    if (workspace) workspace.hidden = live;
+    if (stats) stats.hidden = special;
+    if (workspace) workspace.hidden = special;
     if (board) board.hidden = !live;
-    if (actions) actions.hidden = live;
+    if (activityBoard) activityBoard.hidden = !activity;
+    if (actions) actions.hidden = special;
     const newLabel = $("#newBtn span");
-    if (newLabel) newLabel.textContent = live ? "新建直播" : "新建备忘";
+    if (newLabel) newLabel.textContent = live ? "新建直播" : activity ? "新建活动" : "新建备忘";
     if (live) {
       renderLive();
+      return;
+    }
+    if (activity) {
+      renderActivity();
       return;
     }
     renderStats();
@@ -4685,10 +4993,12 @@ body{background:var(--paper)}
       exportedAt: new Date().toISOString(),
       memos: state.memos,
       livePlans: state.livePlans,
+      activities: state.activities,
       reviews: state.reviews,
       deleted: state.deleted,
       deletedReviews: state.deletedReviews,
-      deletedLive: state.deletedLive
+      deletedLive: state.deletedLive,
+      deletedActivities: state.deletedActivities
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -4787,7 +5097,8 @@ body{background:var(--paper)}
         const parsed = JSON.parse(String(reader.result));
         const rawList = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.memos) ? parsed.memos : null);
         const rawLive = parsed && Array.isArray(parsed.livePlans) ? parsed.livePlans : null;
-        if (!rawList && !rawLive) throw new Error("invalid");
+        const rawActivities = parsed && Array.isArray(parsed.activities) ? parsed.activities : null;
+        if (!rawList && !rawLive && !rawActivities) throw new Error("invalid");
         const imported = (rawList || []).map((raw, i) => {
           const normal = normalizeMemo(raw, i);
           normal.id = uid();
@@ -4799,9 +5110,15 @@ body{background:var(--paper)}
           normal.id = uid();
           return normal;
         });
-        if (!imported.length && !importedLive.length) { showToast("备份里没有可导入的内容"); return; }
+        const importedActivities = (rawActivities || []).map((raw, i) => {
+          const normal = normalizeActivity(raw, i);
+          normal.id = uid();
+          return normal;
+        });
+        if (!imported.length && !importedLive.length && !importedActivities.length) { showToast("备份里没有可导入的内容"); return; }
         state.memos = [...imported, ...state.memos];
         state.livePlans = [...importedLive, ...state.livePlans];
+        state.activities = [...importedActivities, ...state.activities];
         if (parsed && parsed.reviews && typeof parsed.reviews === "object" && !Array.isArray(parsed.reviews)) {
           state.reviews = { ...parsed.reviews, ...state.reviews };
         }
@@ -4813,7 +5130,9 @@ body{background:var(--paper)}
         state.filter = "all";
         state.typeFilter = null;
         renderAll();
-        showToast("已导入 " + imported.length + " 条备忘" + (importedLive.length ? "、" + importedLive.length + " 条直播计划" : ""));
+        showToast("已导入 " + imported.length + " 条备忘" +
+          (importedLive.length ? "、" + importedLive.length + " 条直播计划" : "") +
+          (importedActivities.length ? "、" + importedActivities.length + " 个活动" : ""));
       } catch (err) {
         showToast("导入失败，请选择本应用导出的 JSON");
       }
@@ -4824,17 +5143,21 @@ body{background:var(--paper)}
   function clearAll() {
     const backup = state.memos.slice();
     const backupLive = state.livePlans.slice();
+    const backupActivities = state.activities.slice();
     const backupReviews = state.reviews;
     const backupDeleted = { ...state.deleted };
     const backupDeletedReviews = { ...state.deletedReviews };
     const backupDeletedLive = { ...state.deletedLive };
+    const backupDeletedActivities = { ...state.deletedActivities };
     const backupDemo = state.isDemo;
     const now = new Date().toISOString();
     state.memos.forEach(m => { if (!m.demo) state.deleted[m.id] = now; });
     state.livePlans.forEach(p => { if (!p.demo) state.deletedLive[p.id] = now; });
+    state.activities.forEach(a => { if (!a.demo) state.deletedActivities[a.id] = now; });
     Object.keys(state.reviews).forEach(date => { state.deletedReviews[date] = now; });
     state.memos = [];
     state.livePlans = [];
+    state.activities = [];
     state.reviews = {};
     state.isDemo = false;
     closeDrawer();
@@ -4849,10 +5172,12 @@ body{background:var(--paper)}
     showToast("已清空全部数据", "撤销", () => {
       state.memos = backup;
       state.livePlans = backupLive;
+      state.activities = backupActivities;
       state.reviews = backupReviews;
       state.deleted = backupDeleted;
       state.deletedReviews = backupDeletedReviews;
       state.deletedLive = backupDeletedLive;
+      state.deletedActivities = backupDeletedActivities;
       state.isDemo = backupDemo;
       saveNow(); renderAll();
     });
@@ -4874,11 +5199,13 @@ body{background:var(--paper)}
   }
 
   function setSection(section) {
-    state.section = section === "live" ? "live" : "memos";
+    state.section = (section === "live" || section === "activity") ? section : "memos";
     state.query = "";
     $("#searchInput").value = "";
     $("#clearSearch").hidden = true;
-    $("#searchInput").placeholder = state.section === "live" ? "搜索店铺或备注…" : "搜索标题、备注或标签…";
+    $("#searchInput").placeholder = state.section === "live"
+      ? "搜索店铺或备注…"
+      : state.section === "activity" ? "搜索活动或备注…" : "搜索标题、备注或标签…";
     closeSidebar();
     renderAll();
   }
@@ -4903,7 +5230,7 @@ body{background:var(--paper)}
   function wireEvents() {
     // Navigation
     $$(".nav-item").forEach(btn => btn.addEventListener("click", () => {
-      if (btn.dataset.section === "live") setSection("live");
+      if (btn.dataset.section) setSection(btn.dataset.section);
       else setFilter(btn.dataset.filter);
     }));
     $$(".type-item").forEach(btn => btn.addEventListener("click", () => setType(btn.dataset.type)));
@@ -4916,7 +5243,7 @@ body{background:var(--paper)}
 
     // Search
     const search = $("#searchInput");
-    const rerenderSearch = () => state.section === "live" ? renderLive() : renderFeed();
+    const rerenderSearch = () => state.section === "live" ? renderLive() : state.section === "activity" ? renderActivity() : renderFeed();
     search.addEventListener("input", () => {
       state.query = search.value.trim();
       $("#clearSearch").hidden = !state.query;
@@ -4941,7 +5268,9 @@ body{background:var(--paper)}
     }));
 
     // New / dialog
-    $("#newBtn").addEventListener("click", () => state.section === "live" ? openLiveDialog() : openNewDialog());
+    $("#newBtn").addEventListener("click", () =>
+      state.section === "live" ? openLiveDialog() : state.section === "activity" ? openActivityDialog() : openNewDialog()
+    );
     $("#liveNewBtn").addEventListener("click", () => openLiveDialog());
     $("#liveEmptyAdd").addEventListener("click", () => openLiveDialog());
     $("#liveClose").addEventListener("click", () => { liveEditId = null; $("#liveDialog").close(); });
@@ -4978,6 +5307,28 @@ body{background:var(--paper)}
       if (edit) { openLiveDialog(edit.dataset.liveEdit); return; }
       const del = e.target.closest("[data-live-delete]");
       if (del) deleteLivePlan(del.dataset.liveDelete);
+    });
+    $("#activityNewBtn").addEventListener("click", () => openActivityDialog());
+    $("#activityEmptyAdd").addEventListener("click", () => openActivityDialog());
+    $("#activityClose").addEventListener("click", () => { activityEditId = null; $("#activityDialog").close(); });
+    $("#activityCancel").addEventListener("click", () => { activityEditId = null; $("#activityDialog").close(); });
+    $("#activityForm").addEventListener("submit", e => { e.preventDefault(); saveActivity(); });
+    $("#activityDialog").addEventListener("click", e => {
+      if (e.target === $("#activityDialog")) { activityEditId = null; $("#activityDialog").close(); }
+    });
+    $("#activityDialog").addEventListener("close", () => { activityEditId = null; });
+    $("#activityDelete").addEventListener("click", () => {
+      const id = activityEditId;
+      if (!id) return;
+      activityEditId = null;
+      $("#activityDialog").close();
+      deleteActivity(id);
+    });
+    $("#activityList").addEventListener("click", e => {
+      const edit = e.target.closest("[data-activity-edit]");
+      if (edit) { openActivityDialog(edit.dataset.activityEdit); return; }
+      const del = e.target.closest("[data-activity-delete]");
+      if (del) deleteActivity(del.dataset.activityDelete);
     });
     $("#modalClose").addEventListener("click", () => $("#memoDialog").close());
     $("#modalCancel").addEventListener("click", () => $("#memoDialog").close());
@@ -5241,7 +5592,7 @@ body{background:var(--paper)}
     });
     $("#helpBtn").addEventListener("click", () => $("#helpDialog").showModal());
     $("#demoPill").addEventListener("click", () => {
-      askConfirm("清空示例数据？", "示例数据以及你后续新增的备忘、直播计划都会被删除。清空后仍可在提示条点击「撤销」。", "清空并开始", clearAll);
+      askConfirm("清空示例数据？", "示例数据以及你后续新增的备忘、直播计划、活动都会被删除。清空后仍可在提示条点击「撤销」。", "清空并开始", clearAll);
     });
     $("#sideMenu").addEventListener("click", e => {
       const btn = e.target.closest("[data-menu]");
@@ -5254,7 +5605,7 @@ body{background:var(--paper)}
       if (action === "import") $("#importInput").click();
       if (action === "help") $("#helpDialog").showModal();
       if (action === "clear") {
-        askConfirm("清空全部数据？", "这一操作会删除所有备忘和直播计划。清空后仍可在提示条点击「撤销」。", "清空", clearAll);
+        askConfirm("清空全部数据？", "这一操作会删除所有备忘、直播计划和活动。清空后仍可在提示条点击「撤销」。", "清空", clearAll);
       }
     });
     $("#importInput").addEventListener("change", e => {
@@ -5303,6 +5654,7 @@ body{background:var(--paper)}
       if (e.key === "n" || e.key === "N") {
         e.preventDefault();
         if (state.section === "live") openLiveDialog();
+        else if (state.section === "activity") openActivityDialog();
         else openNewDialog();
       } else if (e.key === "/") {
         e.preventDefault();
