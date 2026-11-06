@@ -1516,8 +1516,7 @@ body{background:var(--paper)}
 .live-table { overflow: hidden; border: 1px solid var(--line); border-radius: 17px; background: var(--surface); box-shadow: var(--shadow-sm); }
 .live-table-head, .live-row { display: grid; grid-template-columns: minmax(150px, 1.05fr) minmax(180px, 1.15fr) minmax(180px, 1fr) 76px; align-items: center; gap: 18px; }
 .live-table-head { padding: 12px 18px; border-bottom: 1px solid var(--line); background: var(--surface-soft); color: var(--muted); font-size: 10px; letter-spacing: .06em; }
-.activity-board .live-table-head, .activity-board .live-row { grid-template-columns: minmax(220px, 1.4fr) minmax(180px, 1fr) minmax(130px, .7fr) 76px; }
-.activity-content { display: block; overflow: hidden; max-width: 320px; margin-top: 2px; color: var(--ink-soft); font-size: 11px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
+.activity-board .live-table-head, .activity-board .live-row { grid-template-columns: minmax(190px, 1.2fr) minmax(210px, 1.2fr) minmax(130px, .7fr) 76px; }
 .live-list { display: flex; flex-direction: column; }
 .live-row { padding: 15px 18px; border-top: 1px solid var(--line); transition: background .15s ease; }
 .live-row:first-child { border-top: 0; }
@@ -1536,6 +1535,7 @@ body{background:var(--paper)}
 .live-chip.is-warn { border-color: #f0d5cd; background: #fdf1ed; color: #b56b58; }
 .live-chip.is-ended { border-color: #e1e9ef; background: #f5f8fa; color: #8fa2b0; }
 .live-chip.is-upcoming { border-color: #d6e9f5; background: #eef8fe; color: #2f6f8e; }
+.live-chip.is-ongoing { border-color: #cde7e5; background: #eaf7f6; color: #347a76; }
 .live-actions { display: flex; justify-content: flex-end; gap: 5px; }
 .live-action { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; transition: .15s ease; }
 .live-action:hover { border-color: #c5d9e8; background: #edf7fd; color: var(--ink); }
@@ -1903,9 +1903,9 @@ body{background:var(--paper)}
             <em>个活动待准备</em>
           </div>
           <div class="live-stat">
-            <span>今天</span>
-            <b id="activityTodayCount">0</b>
-            <em>个活动开始</em>
+            <span>进行中</span>
+            <b id="activityOngoingCount">0</b>
+            <em>个活动进行中</em>
           </div>
           <div class="live-stat">
             <span>已结束</span>
@@ -1916,7 +1916,7 @@ body{background:var(--paper)}
 
         <div class="live-table">
           <div class="live-table-head">
-            <span>店铺 / 活动内容</span>
+            <span>店铺</span>
             <span>活动时间</span>
             <span>状态</span>
             <span></span>
@@ -2100,21 +2100,21 @@ body{background:var(--paper)}
   </div>
   <div class="modal-body">
     <form class="live-form" id="activityForm">
+      <label class="control"><span>店铺</span>
+        <input id="activityShop" type="text" maxlength="40" placeholder="例如：天猫旗舰店" autocomplete="off" required>
+      </label>
       <div class="form-two">
-        <label class="control"><span>店铺</span>
-          <input id="activityShop" type="text" maxlength="40" placeholder="例如：天猫旗舰店" autocomplete="off" required>
-        </label>
-        <label class="control"><span>活动时间</span>
+        <label class="control"><span>开始时间</span>
           <input id="activityStart" type="datetime-local" required>
         </label>
+        <label class="control"><span>结束时间</span>
+          <input id="activityEnd" type="datetime-local" required>
+        </label>
       </div>
-      <label class="control"><span>活动内容</span>
-        <textarea id="activityContent" maxlength="1000" placeholder="例如：双 11 会员日，主推会员礼包和秋冬新品…" required></textarea>
-      </label>
       <label class="control"><span>备注 <em>可选</em></span>
         <textarea id="activityNotes" maxlength="500" placeholder="例如：需要提前准备的物料、对接人、注意事项…"></textarea>
       </label>
-      <p class="live-form-hint">活动开始前 2 天会自动进入预警。</p>
+      <p class="live-form-hint">开始前 2 天和结束前 2 天都会预警；结束时间需要晚于开始时间。</p>
     </form>
   </div>
   <div class="modal-foot">
@@ -2789,11 +2789,16 @@ body{background:var(--paper)}
   function normalizeActivity(raw, index = 0) {
     const now = new Date().toISOString();
     const created = raw && parseDate(raw.createdAt) ? new Date(raw.createdAt).toISOString() : now;
+    const start = raw && parseDate(raw.startAt) ? new Date(raw.startAt) : null;
+    let end = raw && parseDate(raw.endAt) ? new Date(raw.endAt) : null;
+    if (start && (!end || end.getTime() <= start.getTime())) {
+      end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+    }
     return {
       id: raw && typeof raw.id === "string" && raw.id ? raw.id : uid() + "_activity_" + index,
       shop: String((raw && raw.shop) || "未命名店铺").trim().slice(0, 40) || "未命名店铺",
-      startAt: raw && parseDate(raw.startAt) ? toInputValue(new Date(raw.startAt)) : "",
-      content: String((raw && (raw.content || raw.name)) || "").slice(0, 1000),
+      startAt: start ? toInputValue(start) : "",
+      endAt: end ? toInputValue(end) : "",
       notes: String((raw && raw.notes) || "").slice(0, 500),
       demo: !!(raw && raw.demo),
       createdAt: created,
@@ -3688,11 +3693,11 @@ body{background:var(--paper)}
       const shops = new Set(state.activities.map(a => a.shop)).size;
       const soon = state.activities.filter(a => {
         const s = activityStatus(a);
-        return s.key !== "ended" && s.key !== "unknown" && s.days <= 2;
+        return s.key !== "ended" && s.key !== "unknown" && s.warn;
       }).length;
       $("#greetingSub").innerHTML = total
-        ? "已记录 <b>" + total + "</b> 个活动，覆盖 <b>" + shops + "</b> 个店铺" + (soon ? "，其中 <b class=\"warn\">" + soon + "</b> 个在 2 天内开始。" : "。")
-        : "把店铺、活动时间、活动内容和备注记下来，开始前 2 天会预警。";
+        ? "已记录 <b>" + total + "</b> 个活动，覆盖 <b>" + shops + "</b> 个店铺" + (soon ? "，其中 <b class=\"warn\">" + soon + "</b> 个在 2 天内预警。" : "。")
+        : "把店铺、开始时间、结束时间和备注记下来；开始前、结束前 2 天会预警。";
       $("#demoPill").hidden = true;
       $("#crumbCurrent").textContent = "活动";
       document.title = "活动 · OPS NOTE";
@@ -4134,11 +4139,15 @@ body{background:var(--paper)}
     return state.activities.find(a => a.id === id) || null;
   }
 
-  function activityStartText(value) {
-    const d = parseDate(value);
-    if (!d) return "未设置";
-    return (d.getMonth() + 1) + "月" + d.getDate() + "日 周" + "日一二三四五六"[d.getDay()] + " " +
-      pad(d.getHours()) + ":" + pad(d.getMinutes());
+  function activityTimeText(activity) {
+    const s = parseDate(activity.startAt);
+    const e = parseDate(activity.endAt);
+    if (!s) return "未设置";
+    const start = (s.getMonth() + 1) + "月" + s.getDate() + "日 周" + "日一二三四五六"[s.getDay()] + " " +
+      pad(s.getHours()) + ":" + pad(s.getMinutes());
+    if (!e) return start;
+    if (localKey(s) === localKey(e)) return start + " - " + pad(e.getHours()) + ":" + pad(e.getMinutes());
+    return start + " - " + (e.getMonth() + 1) + "月" + e.getDate() + "日 " + pad(e.getHours()) + ":" + pad(e.getMinutes());
   }
 
   function activityDays(value) {
@@ -4148,19 +4157,42 @@ body{background:var(--paper)}
   }
 
   function activityStatus(activity) {
-    const days = activityDays(activity.startAt);
-    if (days === null) return { key: "unknown", label: "未设置", cls: "is-ended", days };
-    if (days < 0) return { key: "ended", label: "已结束", cls: "is-ended", days };
-    if (days === 0) return { key: "today", label: "今天", cls: "is-warn", days };
-    if (days <= 2) return { key: "soon", label: days + "天后", cls: "is-warn", days };
-    return { key: "upcoming", label: "还有 " + days + " 天", cls: "is-upcoming", days };
+    const now = new Date();
+    const start = parseDate(activity.startAt);
+    const end = parseDate(activity.endAt);
+    if (!start || !end) return { key: "unknown", label: "未设置", cls: "is-ended", warn: false, ongoing: false };
+    if (end.getTime() < now.getTime()) return { key: "ended", label: "已结束", cls: "is-ended", warn: false, ongoing: false };
+    const startDays = activityDays(activity.startAt);
+    const endDays = activityDays(activity.endAt);
+    if (start.getTime() > now.getTime()) {
+      if (startDays <= 2) {
+        return {
+          key: "startSoon",
+          label: startDays === 0 ? "今天开始" : startDays + "天后开始",
+          cls: "is-warn",
+          warn: true,
+          ongoing: false
+        };
+      }
+      return { key: "upcoming", label: "还有 " + startDays + " 天", cls: "is-upcoming", warn: false, ongoing: false };
+    }
+    if (endDays <= 2) {
+      return {
+        key: "endSoon",
+        label: endDays === 0 ? "今天结束" : endDays + "天后结束",
+        cls: "is-warn",
+        warn: true,
+        ongoing: true
+      };
+    }
+    return { key: "ongoing", label: "进行中", cls: "is-ongoing", warn: false, ongoing: true };
   }
 
   function renderActivity() {
     const all = state.activities.slice();
     const query = state.query.toLowerCase();
     const list = all
-      .filter(a => !query || a.shop.toLowerCase().includes(query) || (a.content || "").toLowerCase().includes(query) || (a.notes || "").toLowerCase().includes(query))
+      .filter(a => !query || a.shop.toLowerCase().includes(query) || (a.notes || "").toLowerCase().includes(query))
       .sort((a, b) => {
         const as = activityStatus(a);
         const bs = activityStatus(b);
@@ -4168,27 +4200,27 @@ body{background:var(--paper)}
         return (rank(as) - rank(bs)) || String(a.startAt).localeCompare(String(b.startAt)) || a.shop.localeCompare(b.shop, "zh");
       });
 
-    const counts = { total: all.length, soon: 0, today: 0, ended: 0 };
+    const counts = { total: all.length, soon: 0, ongoing: 0, ended: 0 };
     all.forEach(a => {
       const s = activityStatus(a);
       if (s.key === "ended" || s.key === "unknown") counts.ended += 1;
       else {
-        if (s.days <= 2) counts.soon += 1;
-        if (s.days === 0) counts.today += 1;
+        if (s.warn) counts.soon += 1;
+        if (s.ongoing) counts.ongoing += 1;
       }
     });
 
     $("#activityCount").textContent = counts.total;
     $("#activitySoonCount").textContent = counts.soon;
-    $("#activityTodayCount").textContent = counts.today;
+    $("#activityOngoingCount").textContent = counts.ongoing;
     $("#activityEndedCount").textContent = counts.ended;
     $("#activitySoonStat").classList.toggle("is-warn", counts.soon > 0);
     const shops = new Set(all.map(a => a.shop)).size;
     $("#activitySubtitle").textContent = query
       ? "找到 " + list.length + " 个匹配的活动"
       : all.length
-        ? all.length + " 个活动 · " + shops + " 个店铺 · " + counts.soon + " 个在 2 天内开始"
-        : "管理活动时间和准备节奏；活动开始前 2 天进入预警。";
+        ? all.length + " 个活动 · " + shops + " 个店铺 · " + counts.soon + " 个在 2 天内预警"
+        : "管理活动时间和准备节奏；开始前、结束前 2 天都会预警。";
 
     const empty = $("#activityEmpty");
     empty.hidden = list.length > 0;
@@ -4196,16 +4228,15 @@ body{background:var(--paper)}
       $("#activityList").innerHTML = "";
       $("h3", empty).textContent = query ? "没有匹配的活动" : "还没有活动";
       $("p", empty).textContent = query
-        ? "换一个店铺、活动内容或备注关键词试试，或清空搜索。"
-        : "把店铺、活动时间、活动内容和备注记下来，开始前 2 天会自动进入待准备。";
+        ? "换一个店铺或备注关键词试试，或清空搜索。"
+        : "把店铺、开始时间、结束时间和备注记下来，开始前、结束前 2 天会自动进入待准备。";
     } else {
       $("#activityList").innerHTML = list.map(a => {
         const s = activityStatus(a);
-        const content = a.content ? '<span class="activity-content" title="' + esc(a.content) + '">' + esc(a.content.replace(/\s+/g, " ")) + '</span>' : "";
         const note = a.notes ? '<span class="live-shop-note" title="' + esc(a.notes) + '">' + esc(a.notes.replace(/\s+/g, " ")) + '</span>' : "";
         return '<div class="live-row" data-activity-id="' + esc(a.id) + '">' +
-          '<div class="live-shop"><span class="live-shop-dot"></span><div><b>' + esc(a.shop) + '</b>' + content + note + '<small>店铺 / 活动内容</small></div></div>' +
-          '<div class="live-time"><b>' + esc(activityStartText(a.startAt)) + '</b><small>活动时间</small></div>' +
+          '<div class="live-shop"><span class="live-shop-dot"></span><div><b>' + esc(a.shop) + '</b>' + note + '<small>店铺</small></div></div>' +
+          '<div class="live-time"><b>' + esc(activityTimeText(a)) + '</b><small>活动时间</small></div>' +
           '<div class="live-plan"><span class="live-chip ' + s.cls + '">' + esc(s.label) + '</span><small>状态</small></div>' +
           '<div class="live-actions">' +
             '<button class="live-action" data-activity-edit="' + esc(a.id) + '" title="编辑" aria-label="编辑"><svg class="icon"><use href="#i-edit"/></svg></button>' +
@@ -4223,12 +4254,14 @@ body{background:var(--paper)}
     if (id && !activity) return;
     $("#activityDialogTitle").textContent = activity ? "编辑活动" : "新建活动";
     $("#activityShop").value = activity ? activity.shop : "";
-    $("#activityContent").value = activity ? (activity.content || "") : "";
     $("#activityNotes").value = activity ? (activity.notes || "") : "";
     const now = new Date();
     const defaultStart = addDays(now, 1);
     defaultStart.setHours(19, 30, 0, 0);
-    $("#activityStart").value = activity ? activity.startAt : toInputValue(defaultStart);
+    const start = activity && parseDate(activity.startAt) ? parseDate(activity.startAt) : defaultStart;
+    const end = activity && parseDate(activity.endAt) ? parseDate(activity.endAt) : new Date(start.getTime() + 2 * 60 * 60 * 1000);
+    $("#activityStart").value = toInputValue(start);
+    $("#activityEnd").value = toInputValue(end);
     $("#activityDelete").hidden = !activity;
     $("#activityDialog").showModal();
     setTimeout(() => $("#activityShop").focus(), 40);
@@ -4237,23 +4270,26 @@ body{background:var(--paper)}
   function saveActivity() {
     const shop = $("#activityShop").value.trim().slice(0, 40);
     const startAt = $("#activityStart").value;
-    const content = $("#activityContent").value.trim().slice(0, 1000);
+    const endAt = $("#activityEnd").value;
     const notes = $("#activityNotes").value.trim().slice(0, 500);
+    const startDate = parseDate(startAt);
+    const endDate = parseDate(endAt);
     if (!shop) { showToast("先填写店铺"); $("#activityShop").focus(); return; }
-    if (!startAt || !parseDate(startAt)) { showToast("请选择活动时间"); $("#activityStart").focus(); return; }
-    if (!content) { showToast("先填写活动内容"); $("#activityContent").focus(); return; }
+    if (!startDate) { showToast("请选择开始时间"); $("#activityStart").focus(); return; }
+    if (!endDate) { showToast("请选择结束时间"); $("#activityEnd").focus(); return; }
+    if (endDate.getTime() <= startDate.getTime()) { showToast("结束时间需要晚于开始时间"); $("#activityEnd").focus(); return; }
     const now = new Date().toISOString();
     if (activityEditId) {
       const activity = getActivity(activityEditId);
       if (!activity) return;
       activity.shop = shop;
       activity.startAt = startAt;
-      activity.content = content;
+      activity.endAt = endAt;
       activity.notes = notes;
       activity.updatedAt = now;
     } else {
       state.activities.unshift(normalizeActivity({
-        id: uid(), shop, startAt, content, notes, createdAt: now, updatedAt: now
+        id: uid(), shop, startAt, endAt, notes, createdAt: now, updatedAt: now
       }));
     }
     $("#activityDialog").close();
@@ -4266,7 +4302,7 @@ body{background:var(--paper)}
   function deleteActivity(id) {
     const activity = getActivity(id);
     if (!activity) return;
-    askConfirm("删除活动", "删除「" + activity.shop + " · " + (activity.content || "未填写活动内容") + "」？", "删除", () => {
+    askConfirm("删除活动", "删除「" + activity.shop + " · " + activityTimeText(activity) + "」？", "删除", () => {
       state.deletedActivities[id] = new Date().toISOString();
       state.activities = state.activities.filter(a => a.id !== id);
       if (activityEditId === id) { activityEditId = null; $("#activityDialog").close(); }
@@ -5221,7 +5257,7 @@ body{background:var(--paper)}
     $("#clearSearch").hidden = true;
     $("#searchInput").placeholder = state.section === "live"
       ? "搜索店铺或备注…"
-      : state.section === "activity" ? "搜索店铺、活动内容或备注…" : "搜索标题、备注或标签…";
+      : state.section === "activity" ? "搜索店铺或备注…" : "搜索标题、备注或标签…";
     closeSidebar();
     renderAll();
   }
@@ -5329,6 +5365,14 @@ body{background:var(--paper)}
     $("#activityClose").addEventListener("click", () => { activityEditId = null; $("#activityDialog").close(); });
     $("#activityCancel").addEventListener("click", () => { activityEditId = null; $("#activityDialog").close(); });
     $("#activityForm").addEventListener("submit", e => { e.preventDefault(); saveActivity(); });
+    $("#activityStart").addEventListener("change", () => {
+      const start = parseDate($("#activityStart").value);
+      if (!start) return;
+      const end = parseDate($("#activityEnd").value);
+      if (!end || end.getTime() <= start.getTime()) {
+        $("#activityEnd").value = toInputValue(new Date(start.getTime() + 2 * 60 * 60 * 1000));
+      }
+    });
     $("#activityDialog").addEventListener("click", e => {
       if (e.target === $("#activityDialog")) { activityEditId = null; $("#activityDialog").close(); }
     });
