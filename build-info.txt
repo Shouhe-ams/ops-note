@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.16
+version: v1.0.17
 theme: blue
-change: activity start and end time with both warnings
+change: weekday recurrence monday to friday

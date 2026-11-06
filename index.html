@@ -1957,7 +1957,7 @@ body{background:var(--paper)}
         <select id="dType"><option>活动</option><option>内容</option><option>数据</option><option>对接</option><option>复盘</option><option>其他</option></select>
       </label>
       <label class="field-mini"><span>重复</span>
-        <select id="dRepeat"><option value="none">不重复</option><option value="daily">每天</option><option value="weekly">每周</option><option value="monthly">每月</option></select>
+        <select id="dRepeat"><option value="none">不重复</option><option value="weekdays">工作日（周一至周五）</option><option value="weekly">每周</option><option value="monthly">每月</option></select>
       </label>
       <label class="field-mini field-wide"><span>截止时间 <em id="dRepeatHint">设置截止后可重复</em></span>
         <input id="dDue" type="datetime-local">
@@ -2025,7 +2025,7 @@ body{background:var(--paper)}
           <input id="fDue" type="datetime-local">
         </label>
         <label class="control"><span>重复 <em>完成后自动生成下一次</em></span>
-          <select id="fRepeat"><option value="none">不重复</option><option value="daily">每天</option><option value="weekly">每周</option><option value="monthly">每月</option></select>
+          <select id="fRepeat"><option value="none">不重复</option><option value="weekdays">工作日（周一至周五）</option><option value="weekly">每周</option><option value="monthly">每月</option></select>
         </label>
       </div>
       <div class="due-quick" id="dueQuick">
@@ -2289,7 +2289,7 @@ body{background:var(--paper)}
   };
   const STATUS_LABEL = { todo: "待处理", doing: "进行中", done: "已完成" };
   const PRIORITY_LABEL = { high: "高优先", medium: "普通", low: "低优先" };
-  const REPEAT_LABEL = { none: "", daily: "每天", weekly: "每周", monthly: "每月" };
+  const REPEAT_LABEL = { none: "", weekdays: "工作日", daily: "工作日", weekly: "每周", monthly: "每月" };
   const LEGACY_SEED_TITLES = new Set([
     "秋季会员日 · 会场搭建终检",
     "渠道日报数据回填",
@@ -2342,8 +2342,11 @@ body{background:var(--paper)}
   }
   function advanceDate(date, repeat) {
     const d = new Date(date);
-    if (repeat === "daily") {
-      d.setDate(d.getDate() + 1);
+    if (repeat === "weekdays" || repeat === "daily") {
+      // 工作日循环：周一至周五，周五完成后顺延到下周一。
+      do {
+        d.setDate(d.getDate() + 1);
+      } while (d.getDay() === 0 || d.getDay() === 6);
       return d;
     }
     if (repeat === "weekly") {
@@ -2505,7 +2508,7 @@ body{background:var(--paper)}
         id: uid(),
         title: "渠道日报数据回填",
         notes: "补齐抖音、小红书、视频号三个渠道的曝光与转化，异常值单独标注，明早 10 点前同步给负责人。",
-        type: "数据", priority: "high", status: "todo", due: dueAt(-1, 18, 0), repeat: "daily",
+        type: "数据", priority: "high", status: "todo", due: dueAt(-1, 18, 0), repeat: "weekdays",
         tags: ["日报", "渠道"], pinned: false,
         checklist: [
           check("抖音渠道数据", true),
@@ -2636,7 +2639,7 @@ body{background:var(--paper)}
       id: "daily", name: "社群日报", glyph: "稿", type: "内容", priority: "medium",
       title: "社群日报",
       notes: "记录今日社群动作、互动数据和异常，发到运营日报群。",
-      dueMode: "today22", repeat: "daily",
+      dueMode: "today22", repeat: "weekdays",
       checklist: ["今日话题与发送量", "互动率 / 新增人数", "转化与引导数据", "异常与明日动作"]
     },
     {
@@ -2723,7 +2726,8 @@ body{background:var(--paper)}
     const validType = Object.prototype.hasOwnProperty.call(TYPE_META, raw && raw.type) ? raw.type : "其他";
     const status = raw && ["todo", "doing", "done"].includes(raw.status) ? raw.status : "todo";
     const priority = raw && ["high", "medium", "low"].includes(raw.priority) ? raw.priority : "medium";
-    const repeat = raw && ["none", "daily", "weekly", "monthly"].includes(raw.repeat) ? raw.repeat : "none";
+    let repeat = raw && ["none", "daily", "weekdays", "weekly", "monthly"].includes(raw.repeat) ? raw.repeat : "none";
+    if (repeat === "daily") repeat = "weekdays";
     const created = raw && parseDate(raw.createdAt) ? new Date(raw.createdAt).toISOString() : now;
     let completed = null;
     if (status === "done") {
@@ -5751,9 +5755,9 @@ body{background:var(--paper)}
       return " ";
     });
 
-    if (/每天|每日|每晚/.test(text)) {
-      repeat = "daily";
-      text = text.replace(/每天|每日|每晚/g, " ");
+    if (/每天|每日|每晚|工作日|周一到周五|周一至周五/.test(text)) {
+      repeat = "weekdays";
+      text = text.replace(/每天|每日|每晚|工作日|周一到周五|周一至周五/g, " ");
       if (/每晚/.test(original)) period = "晚上";
     } else if (/每周|每星期/.test(text)) {
       repeat = "weekly";
