@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.17
+version: v1.0.18
 theme: blue
-change: weekday recurrence monday to friday
+change: natural language default due 19:30 for every date

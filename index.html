@@ -5830,7 +5830,8 @@ body{background:var(--paper)}
         if (target.getTime() <= now.getTime() + 5 * 60000) target = addDays(target, 1);
       } else {
         if (!timeFound) {
-          if ((dateToken === "今天" || dateToken === "今日") && !period) {
+          if (!period) {
+            // 没有写具体时间时，不论今天、明天、后天还是周几，默认都是 19:30。
             hour = 19;
             minute = 30;
           } else {
