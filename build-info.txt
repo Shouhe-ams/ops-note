@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.18
+version: v1.0.19
 theme: blue
-change: natural language default due 19:30 for every date
+change: repair weekday recurrences stuck on weekends

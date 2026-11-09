@@ -2728,6 +2728,17 @@ body{background:var(--paper)}
     const priority = raw && ["high", "medium", "low"].includes(raw.priority) ? raw.priority : "medium";
     let repeat = raw && ["none", "daily", "weekdays", "weekly", "monthly"].includes(raw.repeat) ? raw.repeat : "none";
     if (repeat === "daily") repeat = "weekdays";
+    let dueValue = raw && typeof raw.due === "string" && parseDate(raw.due) ? raw.due : null;
+    if (repeat === "weekdays" && status !== "done" && dueValue) {
+      const dueDate = parseDate(dueValue);
+      if (dueDate && (dueDate.getDay() === 0 || dueDate.getDay() === 6)) {
+        // 修复旧版本遗留在周末的工作日循环事项，统一顺延到周一。
+        do {
+          dueDate.setDate(dueDate.getDate() + 1);
+        } while (dueDate.getDay() === 0 || dueDate.getDay() === 6);
+        dueValue = toInputValue(dueDate);
+      }
+    }
     const created = raw && parseDate(raw.createdAt) ? new Date(raw.createdAt).toISOString() : now;
     let completed = null;
     if (status === "done") {
@@ -2740,7 +2751,7 @@ body{background:var(--paper)}
       type: validType,
       priority,
       status,
-      due: raw && typeof raw.due === "string" && parseDate(raw.due) ? raw.due : null,
+      due: dueValue,
       tags: Array.isArray(raw && raw.tags) ? raw.tags.map(t => String(t).slice(0, 20)).filter(Boolean).slice(0, 5) : [],
       checklist: Array.isArray(raw && raw.checklist)
         ? raw.checklist.filter(c => c && typeof c === "object").map(c => ({
