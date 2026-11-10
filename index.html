@@ -1763,6 +1763,9 @@ body{background:var(--paper)}
               <p class="feed-sub" id="listSubtitle">按截止时间推进</p>
             </div>
             <div class="feed-tools">
+              <button class="btn" id="restoreRepeatBtn" hidden title="把当前已完成列表里的未重复事项恢复为工作日循环">
+                <svg class="icon"><use href="#i-refresh"/></svg><span>恢复工作日循环</span>
+              </button>
               <select class="sort-select" id="sortSelect" aria-label="排序方式">
                 <option value="smart">智能排序</option>
                 <option value="due">按截止时间</option>
@@ -3944,6 +3947,13 @@ body{background:var(--paper)}
     }
     $("#listSubtitle").textContent = subtitle;
 
+    const restoreBtn = $("#restoreRepeatBtn");
+    if (restoreBtn) {
+      const restoreable = state.filter === "done"
+        ? list.filter(m => m.repeat === "none" && !m.spawnedId).length : 0;
+      restoreBtn.hidden = restoreable === 0;
+      $("span", restoreBtn).textContent = restoreable ? "恢复循环 (" + restoreable + ")" : "恢复工作日循环";
+    }
     $$(".view-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.view === state.view));
     $("#sortSelect").value = state.sort;
     const isBoard = state.view === "board";
@@ -4605,6 +4615,39 @@ body{background:var(--paper)}
       );
     }
   }
+  function restoreWeekdaySeries() {
+    if (state.filter !== "done") return;
+    const candidates = baseListForView().filter(m => m.status === "done" && m.repeat === "none" && !m.spawnedId);
+    if (!candidates.length) { showToast("当前已完成列表里没有可恢复的事项"); return; }
+    askConfirm(
+      "恢复工作日循环",
+      "将把当前已完成列表里的 " + candidates.length + " 条未设置重复的事项改为工作日循环，并生成下一次（默认 19:30）。只处理当前列表。",
+      "恢复",
+      () => {
+        const before = snapshotMemos();
+        const now = new Date();
+        const nowIso = now.toISOString();
+        let spawned = 0;
+        candidates.forEach(m => {
+          const previous = parseDate(m.due);
+          const base = new Date(now);
+          base.setHours(previous ? previous.getHours() : 19, previous ? previous.getMinutes() : 30, 0, 0);
+          m.repeat = "weekdays";
+          m.due = toInputValue(base);
+          m.updatedAt = nowIso;
+          if (spawnNextFor(m)) spawned += 1;
+        });
+        saveNow();
+        renderAll();
+        showToast(
+          "已恢复 " + candidates.length + " 条，生成 " + spawned + " 条下一次",
+          "撤销",
+          () => restoreMemos(before)
+        );
+      }
+    );
+  }
+
   function snoozeToTomorrow(id) {
     const m = getMemo(id);
     if (!m) return;
@@ -5327,6 +5370,7 @@ body{background:var(--paper)}
     });
 
     // Sort & view
+    $("#restoreRepeatBtn").addEventListener("click", restoreWeekdaySeries);
     $("#sortSelect").addEventListener("change", e => { state.sort = e.target.value; renderFeed(); });
     $$(".view-btn").forEach(btn => btn.addEventListener("click", () => {
       state.view = btn.dataset.view;

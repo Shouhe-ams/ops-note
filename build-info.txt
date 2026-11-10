@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.19
+version: v1.0.20
 theme: blue
-change: repair weekday recurrences stuck on weekends
+change: batch restore completed items to weekday recurrence
