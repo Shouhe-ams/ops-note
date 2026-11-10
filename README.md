@@ -197,8 +197,8 @@ npx vercel --prod
 修改前端资源后，建议同时修改 `sw.js` 顶部的缓存版本，否则老用户可能继续看到旧缓存：
 
 ```js
-// 原来是 v1.0.21，改成 v1.0.22
-const CACHE_VERSION = "ops-note-v1.0.22";
+// 原来是 v1.0.22，改成 v1.0.23
+const CACHE_VERSION = "ops-note-v1.0.23";
 ```
 
 Service Worker 会在下一次访问时更新缓存。

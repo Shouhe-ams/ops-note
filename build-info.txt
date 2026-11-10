@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.21
+version: v1.0.22
 theme: blue
-change: GitHub Pages support and meta CSP
+change: batch set weekday series to today

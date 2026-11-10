@@ -1769,6 +1769,9 @@ body{background:var(--paper)}
               <button class="btn" id="restoreRepeatBtn" hidden title="把当前已完成列表里的未重复事项恢复为工作日循环">
                 <svg class="icon"><use href="#i-refresh"/></svg><span>恢复工作日循环</span>
               </button>
+              <button class="btn" id="startTodayBtn" hidden title="把当前全部备忘里的未完成工作日循环截止日期改为今天">
+                <svg class="icon"><use href="#i-calendar"/></svg><span>工作日设为今天</span>
+              </button>
               <select class="sort-select" id="sortSelect" aria-label="排序方式">
                 <option value="smart">智能排序</option>
                 <option value="due">按截止时间</option>
@@ -3957,6 +3960,18 @@ body{background:var(--paper)}
       restoreBtn.hidden = restoreable === 0;
       $("span", restoreBtn).textContent = restoreable ? "恢复循环 (" + restoreable + ")" : "恢复工作日循环";
     }
+    const startTodayBtn = $("#startTodayBtn");
+    if (startTodayBtn) {
+      const todayKey = localKey();
+      const weekdayActive = state.filter === "all"
+        ? list.filter(m => {
+            if (m.status === "done" || m.repeat !== "weekdays") return false;
+            const due = parseDate(m.due);
+            return !due || localKey(due) !== todayKey;
+          }).length : 0;
+      startTodayBtn.hidden = weekdayActive === 0;
+      $("span", startTodayBtn).textContent = weekdayActive ? "工作日设为今天 (" + weekdayActive + ")" : "工作日设为今天";
+    }
     $$(".view-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.view === state.view));
     $("#sortSelect").value = state.sort;
     const isBoard = state.view === "board";
@@ -4618,6 +4633,37 @@ body{background:var(--paper)}
       );
     }
   }
+  function setWeekdaySeriesToday() {
+    if (state.filter !== "all") return;
+    const todayKey = localKey();
+    const candidates = baseListForView().filter(m => {
+      if (m.status === "done" || m.repeat !== "weekdays") return false;
+      const due = parseDate(m.due);
+      return !due || localKey(due) !== todayKey;
+    });
+    if (!candidates.length) { showToast("当前全部备忘里没有未完成的工作日循环"); return; }
+    askConfirm(
+      "工作日设为今天",
+      "将把当前全部备忘里的 " + candidates.length + " 条未完成工作日循环的截止日期改为今天，保留原来的时间；没有时间的用 19:30。",
+      "设为今天",
+      () => {
+        const before = snapshotMemos();
+        const now = new Date();
+        const nowIso = now.toISOString();
+        candidates.forEach(m => {
+          const previous = parseDate(m.due);
+          const base = new Date(now);
+          base.setHours(previous ? previous.getHours() : 19, previous ? previous.getMinutes() : 30, 0, 0);
+          m.due = toInputValue(base);
+          m.updatedAt = nowIso;
+        });
+        save();
+        renderAll();
+        showToast("已把 " + candidates.length + " 条工作日循环设为今天", "撤销", () => restoreMemos(before));
+      }
+    );
+  }
+
   function restoreWeekdaySeries() {
     if (state.filter !== "done") return;
     const candidates = baseListForView().filter(m => m.status === "done" && m.repeat === "none" && !m.spawnedId);
@@ -5373,6 +5419,7 @@ body{background:var(--paper)}
     });
 
     // Sort & view
+    $("#startTodayBtn").addEventListener("click", setWeekdaySeriesToday);
     $("#restoreRepeatBtn").addEventListener("click", restoreWeekdaySeries);
     $("#sortSelect").addEventListener("change", e => { state.sort = e.target.value; renderFeed(); });
     $$(".view-btn").forEach(btn => btn.addEventListener("click", () => {
