@@ -4,6 +4,30 @@
 
 上线后你会得到一个 HTTPS 网址，电脑和手机都能打开；支持添加到手机桌面（PWA）和离线使用。
 
+## GitHub Pages 部署
+
+仓库已经可以直接发布，不需要构建：
+
+1. GitHub 仓库 → **Settings → Pages**
+2. **Build and deployment → Source** 选 **Deploy from a branch**
+3. Branch 选 **main**，目录选 **/ (root)**
+4. 点 **Save**
+
+发布后的网址：
+
+```text
+https://shouhe-ams.github.io/ops-note/
+```
+
+因为这是项目页面，`index.html`、`manifest.json`、`sw.js` 和图标都在仓库根目录，使用相对路径即可正常工作。
+
+Supabase 需要同步加一项：
+
+- **Authentication → URL Configuration → Redirect URLs**
+- 加入 `https://shouhe-ams.github.io/ops-note/**`
+
+GitHub Pages 不读取 `_headers`，所以安全头改用 `index.html` 里的 meta CSP 补足；`X-Frame-Options` 这类响应头无法用 meta 设置。
+
 > 不登录时，数据保存在**每个浏览器自己的 localStorage** 里。登录云同步后，会写入你自己的 Supabase 项目，并在同一账号的设备间合并同步。换设备或清理浏览器数据前，仍建议在应用内「更多 → 导出备份」保存一份 JSON。
 
 ---
@@ -168,13 +192,13 @@ npx vercel --prod
 
 ## 更新应用
 
-站点已连接 GitHub 后，提交并推送 `main` 分支会自动触发 Netlify 部署。
+站点已连接 GitHub 后，提交并推送 `main` 分支会自动触发 Netlify 或 GitHub Pages 部署。
 
 修改前端资源后，建议同时修改 `sw.js` 顶部的缓存版本，否则老用户可能继续看到旧缓存：
 
 ```js
-// 原来是 v1.0.20，改成 v1.0.21
-const CACHE_VERSION = "ops-note-v1.0.21";
+// 原来是 v1.0.21，改成 v1.0.22
+const CACHE_VERSION = "ops-note-v1.0.22";
 ```
 
 Service Worker 会在下一次访问时更新缓存。

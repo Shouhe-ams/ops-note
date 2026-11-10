@@ -1,4 +1,4 @@
 site: OPS NOTE 备忘录
-version: v1.0.20
+version: v1.0.21
 theme: blue
-change: batch restore completed items to weekday recurrence
+change: GitHub Pages support and meta CSP
